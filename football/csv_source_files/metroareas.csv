@@ -1,0 +1,363 @@
+New York,NY,1,0,0,1,2
+Los Angeles,CA,1,0,0,4,9
+Chicago,IL,1,0,0,2,3
+Dallas,TX,1,0,0,3,7
+Philadelphia,PA,1,0,0,1,2
+Houston,TX,1,0,0,3,7
+Miami,FL,1,0,0,3,5
+Atlanta,GA,1,0,0,3,5
+Washington,DC,1,0,0,3,5
+Boston,MA,1,0,0,1,1
+Detroit,MI,1,0,0,2,3
+Phoenix,AZ,1,0,0,4,8
+San Francisco,CA,1,0,0,4,9
+Riverside,CA,1,0,0,4,9
+Seattle,WA,1,0,0,4,9
+Minneapolis,MN,1,0,0,2,4
+San Diego,CA,1,0,0,4,9
+St. Louis,MO,1,0,0,2,4
+Tampa,FL,1,0,0,3,5
+Baltimore,MD,1,0,0,3,5
+Denver,CO,1,0,0,4,8
+Pittsburgh,PA,1,0,0,1,2
+Portland,OR,1,0,0,4,9
+Cincinnati,OH,1,0,0,2,3
+Sacramento,CA,1,0,0,4,9
+Cleveland,OH,1,0,0,2,3
+Orlando,FL,1,0,0,3,5
+San Antonio,TX,1,0,0,3,7
+Kansas City,MO,1,0,0,2,4
+Las Vegas,NV,1,0,0,4,8
+San Jose,CA,1,0,0,4,9
+Columbus,OH,1,0,0,2,3
+Indianapolis,IN,1,0,0,2,3
+Charlotte,NC,1,0,0,3,5
+Virginia Beach,VA,1,1,0,3,5
+Austin,TX,1,1,0,3,7
+Providence,RI,1,1,0,1,1
+Nashville,TN,1,1,0,3,6
+Milwaukee,WI,1,1,0,2,3
+Jacksonville,FL,1,1,0,3,5
+Memphis,TN,1,1,0,3,6
+Louisville,KY,1,1,0,3,6
+Richmond,VA,1,1,0,3,5
+Oklahoma City,OK,1,1,0,3,7
+Hartford,CT,1,1,0,1,1
+New Orleans,LA,1,1,0,3,7
+Buffalo,NY,1,1,0,1,2
+Birmingham,AL,1,1,0,3,6
+Salt Lake City,UT,1,1,0,4,8
+Raleigh,NC,1,1,0,3,5
+Rochester,NY,1,1,0,1,2
+Tucson,AZ,1,1,0,4,8
+Tulsa,OK,0,1,0,3,7
+Fresno,CA,0,1,0,4,9
+Honolulu,HI,0,1,0,4,9
+Bridgeport,CT,0,1,0,1,1
+Albany,NY,0,1,0,1,2
+New Haven,CT,0,1,0,1,1
+Albuquerque,NM,0,1,0,4,8
+Omaha,NE,0,1,0,2,4
+Dayton,OH,0,1,0,2,3
+Allentown,PA,0,1,0,1,2
+Bakersfield,CA,0,1,0,4,9
+Oxnard,CA,0,1,0,4,9
+Worcester,MA,0,1,0,1,1
+Grand Rapids,MI,0,1,0,2,3
+Baton Rouge,LA,0,1,0,3,7
+El Paso,TX,0,1,0,3,7
+Columbia,SC,0,1,0,3,5
+McAllen,TX,0,1,0,3,7
+Greensboro,NC,0,1,0,3,5
+Akron,OH,0,1,0,2,3
+Knoxville,TN,0,1,0,3,6
+Bradenton,FL,0,1,0,3,5
+Springfield,MA,0,1,0,1,1
+Little Rock,AR,0,1,0,3,7
+Poughkeepsie,NY,0,1,0,1,2
+Stockton,CA,0,1,0,4,9
+Toledo,OH,0,1,0,2,3
+Charleston,SC,0,1,0,3,5
+Syracuse,NY,0,1,0,1,2
+Greenville,SC,0,1,0,3,5
+Colorado Springs,CO,0,1,0,4,8
+Wichita,KS,0,1,0,2,4
+Boise City,ID,0,1,0,4,8
+Cape Coral,FL,0,1,0,3,5
+Lakeland,FL,0,1,0,3,5
+Youngstown,OH,0,1,0,2,3
+Madison,WI,0,1,0,2,3
+Des Moines,IA,0,1,0,2,4
+Scranton,PA,0,1,0,1,2
+Provo,UT,0,1,0,4,8
+Jackson,MS,0,1,0,3,6
+Palm Bay,FL,0,1,0,3,5
+Augusta,GA,0,1,0,3,5
+Ogden,UT,0,1,0,4,8
+Harrisburg,PA,0,1,0,1,2
+Chattanooga,TN,0,1,0,3,6
+Portland,ME,0,1,0,1,1
+Modesto,CA,0,1,0,4,9
+Lancaster,PA,0,1,0,1,2
+Deltona,FL,0,0,1,3,5
+Durham,NC,0,0,1,3,5
+Winston-Salem,NC,0,0,1,3,5
+Santa Rosa,CA,0,0,1,4,9
+Spokane,WA,0,0,1,4,9
+Lansing,MI,0,0,1,2,3
+Lexington,KY,0,0,1,3,6
+Pensacola,FL,0,0,1,3,5
+Fayetteville,AR,0,0,1,3,7
+Flint,MI,0,0,1,2,3
+Visalia,CA,0,0,1,4,9
+Springfield,MO,0,0,1,2,4
+York,PA,0,0,1,1,2
+Corpus Christi,TX,0,0,1,3,7
+Reno,NV,0,0,1,4,8
+Fort Wayne,IN,0,0,1,2,3
+Asheville,NC,0,0,1,3,5
+Salinas,CA,0,0,1,4,9
+Canton,OH,0,0,1,2,3
+Vallejo,CA,0,0,1,4,9
+Mobile,AL,0,0,1,3,6
+Santa Barbara,CA,0,0,1,4,9
+Port St. Lucie,FL,0,0,1,3,5
+Reading,PA,0,0,1,1,2
+Manchester,NH,0,0,1,1,1
+Huntsville,AL,0,0,1,3,6
+Brownsville,TX,0,0,1,3,7
+Salem,OR,0,0,1,4,9
+Shreveport,LA,0,0,1,3,7
+Killeen,TX,0,0,1,3,7
+Beaumont,TX,0,0,1,3,7
+Davenport,IA,0,0,1,2,4
+Peoria,IL,0,0,1,2,3
+Montgomery,AL,0,0,1,3,6
+Trenton,NJ,0,0,1,1,2
+Anchorage,AK,0,0,1,4,9
+Hickory,NC,0,0,1,3,5
+Tallahassee,FL,0,0,1,3,5
+Fayetteville,NC,0,0,1,3,5
+Rockford,IL,0,0,1,2,3
+Evansville,IN,0,0,1,2,3
+Ann Arbor,MI,0,0,1,2,3
+Wilmington,NC,0,0,1,3,5
+Eugene,OR,0,0,1,4,9
+Savannah,GA,0,0,1,3,5
+Ocala,FL,0,0,1,3,5
+Kalamazoo,MI,0,0,1,2,3
+South Bend,IN,0,0,1,2,3
+Naples,FL,0,0,1,3,5
+Kingsport,TN,0,0,1,3,6
+Charleston,WV,0,0,1,3,5
+Green Bay,WI,0,0,1,2,3
+Roanoke,VA,0,0,1,3,5
+Lincoln,NE,0,0,1,2,4
+Utica,NY,0,0,1,1,2
+Boulder,CO,0,0,1,4,8
+Fort Collins,CO,0,0,1,4,8
+Fort Smith,AR,0,0,1,3,7
+Columbus,GA,0,0,1,3,5
+Huntington,WV,0,0,1,3,5
+Spartanburg,SC,0,0,1,3,5
+Erie,PA,0,0,1,1,2
+Duluth,MN,0,0,1,2,4
+Atlantic City,NJ,0,0,1,1,2
+Lubbock,TX,0,0,1,3,7
+San Luis Obispo,CA,0,0,1,4,9
+Norwich,CT,0,0,1,1,1
+Hagerstown,MD,0,0,1,3,5
+Clarksville,TN,0,0,1,3,6
+Holland,MI,0,0,1,2,3
+Lafayette,LA,0,0,1,3,7
+Gainesville,FL,0,0,1,3,5
+Myrtle Beach,SC,0,0,1,3,5
+Cedar Rapids,IA,0,0,1,2,4
+Santa Cruz,CA,0,0,1,4,9
+Greeley,CO,0,0,1,4,8
+Merced,CA,0,0,1,4,9
+Lynchburg,VA,0,0,1,3,5
+Binghamton,NY,0,0,1,1,2
+Olympia,WA,0,0,1,4,9
+Amarillo,TX,0,0,1,3,7
+Bremerton,WA,0,0,1,4,9
+Laredo,TX,0,0,1,3,7
+Kennewick,WA,0,0,1,4,9
+Gulfport,MS,0,0,1,3,6
+Yakima,WA,0,0,1,4,9
+Sioux Falls,SD,0,0,1,2,4
+Macon,GA,0,0,1,3,5
+Waco,TX,0,0,1,3,7
+Topeka,KS,0,0,1,2,4
+Champaign,IL,0,0,1,2,3
+Barnstable Town,MA,0,0,1,1,1
+Chico,CA,0,0,1,4,9
+Appleton,WI,0,0,1,2,3
+Prescott,AZ,0,0,1,4,8
+Burlington,VT,0,0,1,1,1
+College Station,TX,0,0,1,3,7
+Springfield,IL,0,0,1,2,3
+Tuscaloosa,AL,0,0,1,3,6
+Longview,TX,0,0,1,3,7
+Las Cruces,NM,0,0,1,4,8
+Tyler,TX,0,0,1,3,7
+Houma,LA,0,0,1,3,7
+Medford,OR,0,0,1,4,9
+Saginaw,MI,0,0,1,2,3
+Florence,SC,0,0,1,3,5
+Racine,WI,0,0,1,2,3
+Elkhart,IN,0,0,1,2,3
+Bellingham,WA,0,0,1,4,9
+Lake Havasu City,AZ,0,0,1,4,8
+Johnson City,TN,0,0,1,3,6
+Fargo,ND,0,0,1,2,4
+Charlottesville,VA,0,0,1,3,5
+Yuma,AZ,0,0,1,4,8
+Lafayette,IN,0,0,1,2,3
+Lake Charles,LA,0,0,1,3,7
+Athens,GA,0,0,1,3,5
+St. Cloud,MN,0,0,1,2,4
+Gainesville,GA,0,0,1,3,5
+Bloomington,IN,0,0,1,2,3
+Rochester,MN,0,0,1,2,4
+Anderson,SC,0,0,1,3,5
+Kingston,NY,0,0,1,1,2
+Redding,CA,0,0,1,4,9
+Fort Walton Beach,FL,0,0,1,3,5
+Greenville,NC,0,0,1,3,5
+Muskegon,MI,0,0,1,2,3
+Joplin,MO,0,0,1,2,4
+Monroe,LA,0,0,1,3,7
+Terre Haute,IN,0,0,1,2,3
+Jacksonville,NC,0,0,1,3,5
+Bloomington,IL,0,0,1,2,3
+Yuba City,CA,0,0,1,4,9
+Albany,GA,0,0,1,3,5
+Columbia,MO,0,0,1,2,4
+Waterloo,IA,0,0,1,2,4
+El Centro,CA,0,0,1,4,9
+Panama City,FL,0,0,1,3,5
+Oshkosh,WI,0,0,1,2,3
+Parkersburg,WV,0,0,1,3,5
+Janesville,WI,0,0,1,2,3
+Jackson,MI,0,0,1,2,3
+Abilene,TX,0,0,1,3,7
+Niles,MI,0,0,1,2,3
+Eau Claire,WI,0,0,1,2,3
+Bend,OR,0,0,1,4,9
+Blacksburg,VA,0,0,1,3,5
+Vineland,NJ,0,0,1,1,2
+Pueblo,CO,0,0,1,4,8
+Dover,DE,0,0,1,3,5
+Alexandria,LA,0,0,1,3,7
+Pascagoula,MS,0,0,1,3,6
+Monroe,MI,0,0,1,2,3
+Billings,MT,0,0,1,4,8
+Decatur,AL,0,0,1,3,6
+Punta Gorda,FL,0,0,1,3,5
+Hanford,CA,0,0,1,4,9
+Iowa City,IA,0,0,1,2,4
+Bangor,ME,0,0,1,1,1
+Madera,CA,0,0,1,4,9
+Burlington,NC,0,0,1,3,5
+Wichita Falls,TX,0,0,1,3,7
+Jefferson City,MO,0,0,1,2,4
+Rocky Mount,NC,0,0,1,3,5
+Wheeling,WV,0,0,1,3,5
+State College,PA,0,0,1,1,2
+Johnstown,PA,0,0,1,1,2
+Santa Fe,NM,0,0,1,4,8
+Florence,AL,0,0,1,3,6
+Grand Junction,CO,0,0,1,4,8
+Sioux City,IA,0,0,1,2,4
+Dothan,AL,0,0,1,3,6
+Hattiesburg,MS,0,0,1,3,6
+Springfield,OH,0,0,1,2,3
+St. George,UT,0,0,1,4,8
+Coeur d'Alene,ID,0,0,1,4,8
+Morristown,TN,0,0,1,3,6
+Battle Creek,MI,0,0,1,2,3
+Texarkana,TX,0,0,1,3,7
+Dalton,GA,0,0,1,3,5
+Napa,CA,0,0,1,4,9
+Valdosta,GA,0,0,1,3,5
+Warner Robins,GA,0,0,1,3,5
+Auburn,AL,0,0,1,3,6
+Sebastian,FL,0,0,1,3,5
+Odessa,TX,0,0,1,3,7
+La Crosse,WI,0,0,1,2,3
+Anderson,IN,0,0,1,2,3
+Wausau,WI,0,0,1,2,3
+Midland,TX,0,0,1,3,7
+Pittsfield,MA,0,0,1,1,1
+Lebanon,PA,0,0,1,1,2
+Glens Falls,NY,0,0,1,1,2
+Flagstaff,AZ,0,0,1,4,8
+St. Joseph,MO,0,0,1,2,4
+Altoona,PA,0,0,1,1,2
+Logan,UT,0,0,1,4,8
+Mansfield,OH,0,0,1,2,3
+Idaho Falls,ID,0,0,1,4,8
+Rapid City,SD,0,0,1,2,4
+Farmington,NM,0,0,1,4,8
+Winchester,VA,0,0,1,3,5
+Weirton,WV,0,0,1,3,5
+Salisbury,MD,0,0,1,3,5
+Sherman,TX,0,0,1,3,7
+Morgantown,WV,0,0,1,3,5
+Harrisonburg,VA,0,0,1,3,5
+Mount Vernon,WA,0,0,1,4,9
+Bowling Green,KY,0,0,1,3,6
+Jonesboro,AR,0,0,1,3,7
+Williamsport,PA,0,0,1,1,2
+Lawrence,KS,0,0,1,2,4
+Muncie,IN,0,0,1,2,3
+Sheboygan,WI,0,0,1,2,3
+Victoria,TX,0,0,1,3,7
+Goldsboro,NC,0,0,1,3,5
+Anniston,AL,0,0,1,3,6
+Owensboro,KY,0,0,1,3,6
+Jackson,TN,0,0,1,3,6
+Kankakee,IL,0,0,1,2,3
+Elizabethtown,KY,0,0,1,3,6
+Cleveland,TN,0,0,1,3,6
+Lawton,OK,0,0,1,3,7
+Michigan City,IN,0,0,1,2,3
+San Angelo,TX,0,0,1,3,7
+Decatur,IL,0,0,1,2,3
+Wenatchee,WA,0,0,1,4,9
+Bay City,MI,0,0,1,2,3
+Missoula,MT,0,0,1,4,8
+Lewiston,ME,0,0,1,1,1
+Danville,VA,0,0,1,3,5
+Lima,OH,0,0,1,2,3
+Bismarck,ND,0,0,1,2,4
+Sumter,SC,0,0,1,3,5
+Gadsden,AL,0,0,1,3,6
+Brunswick,GA,0,0,1,3,5
+Longview,WA,0,0,1,4,9
+Ithaca,NY,0,0,1,1,2
+Pine Bluff,AR,0,0,1,3,7
+Fond du Lac,WI,0,0,1,2,3
+Kokomo,IN,0,0,1,2,3
+Cumberland,MD,0,0,1,3,5
+Fairbanks,AK,0,0,1,4,9
+Hot Springs,AR,0,0,1,3,7
+Grand Forks,ND,0,0,1,2,4
+Rome,GA,0,0,1,3,5
+Ocean City,NJ,0,0,1,1,2
+Dubuque,IA,0,0,1,2,4
+Palm Coast,FL,0,0,1,3,5
+Pocatello,ID,0,0,1,4,8
+Elmira,NY,0,0,1,1,2
+Cheyenne,WY,0,0,1,4,8
+Ames,IA,0,0,1,2,4
+Great Falls,MT,0,0,1,4,8
+Corvallis,OR,0,0,1,4,9
+Danville,IL,0,0,1,2,3
+Sandusky,OH,0,0,1,2,3
+Columbus,IN,0,0,1,2,3
+Casper,WY,0,0,1,4,8
+Hinesville,GA,0,0,1,3,5
+Lewiston,ID,0,0,1,4,8
+Carson City,NV,0,0,1,4,8
