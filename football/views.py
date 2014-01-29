@@ -8,7 +8,7 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from django.db import transaction
 
-from models import Player, Year, City, Nickname, Team
+from models import Universe, Player, Year, City, Nickname, Team
 
 import names
 
@@ -44,7 +44,15 @@ def initialize_nicknames(request):
                             )
     Nickname.objects.bulk_create(nicknames)
     return HttpResponse("Nicknames inititalized.")    
-
+    
+def create_universe(request, name):
+    u = Universe(name=name)
+    u.save()
+    create_teams(request, 'pro', 8)
+    for x in xrange(15):
+        advance_year(request)
+    
+    return HttpResponse("Universe %s created." % name)
 
 def create_teams(request, level, number):
     if level == 'any':
@@ -121,7 +129,7 @@ def advance_year(request):
     y.year += 1
     y.save()
     age_players(request, 1)
-    create_players(request, 75)
+    create_players(request, 600)
 
     return HttpResponse("Advanced one year.")
 

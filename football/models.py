@@ -1,10 +1,21 @@
 from django.db import models
 
+class Universe(models.Model):
+    def __unicode__(self):
+        return self.name
+        
+    name = models.CharField(max_length=60)
+
 class Year(models.Model):
     def __unicode__(self):
         return unicode(self.year)
         
     year = models.IntegerField(default=1960)
+    universe = models.ForeignKey(Universe, related_name='universe')
+    current_year = models.BooleanField(default=True)
+    
+    class Meta:
+        unique_together = ('year','universe')
 
 class Player(models.Model):
     
@@ -75,16 +86,57 @@ class Team(models.Model):
     # primary_color = (randint(0,255),randint(0,255),randint(0,255))
     # secondary_color = (randint(0,255),randint(0,255),randint(0,255))
 
-#class Roster(models.Model):
-#     team = models.ForeignKey(Team)
-#     year = models.ForeignKey(Year)
-#     qb = models.ForeignKey(Player)
-#     rb = models.ForeignKey(Player)
-#     wr = models.ForeignKey(Player)
-#     ol = models.ForeignKey(Player)
-#     dl = models.ForeignKey(Player)
-#     lb = models.ForeignKey(Player)
-#     cb = models.ForeignKey(Player)
-#     s = models.ForeignKey(Player)
-#     p = models.ForeignKey(Player)
-#     k = models.ForeignKey(Player)  
+class Roster(models.Model):
+    def __unicode__(self):
+        return unicode(self.team) + ' ' + unicode(self.year)
+        
+    team = models.ForeignKey(Team)
+    year = models.ForeignKey(Year)
+    qb = models.ForeignKey(Player, 
+                           related_name='quarterback', 
+                           limit_choices_to={'position' : 'QB',
+                                             'retired' : False})
+    rb = models.ForeignKey(Player, 
+                           related_name='running back', 
+                           limit_choices_to={'position' : 'RB',
+                                             'retired' : False})
+    wr = models.ForeignKey(Player, 
+                           related_name='wide receiver', 
+                           limit_choices_to={'position' : 'WR',
+                                             'retired' : False})
+    og = models.ForeignKey(Player, 
+                           related_name='offensive guard', 
+                           limit_choices_to={'position' : 'OG',
+                                             'retired' : False})
+    ot = models.ForeignKey(Player, 
+                           related_name='offensive tackle', 
+                           limit_choices_to={'position' : 'OT',
+                                             'retired' : False})
+    de = models.ForeignKey(Player, 
+                           related_name='defensive end', 
+                           limit_choices_to={'position' : 'DE',
+                                             'retired' : False})
+    dt = models.ForeignKey(Player, 
+                           related_name='defensive tackle', 
+                           limit_choices_to={'position' : 'DT',
+                                             'retired' : False})
+    lb = models.ForeignKey(Player, 
+                           related_name='linebacker', 
+                           limit_choices_to={'position' : 'LB',
+                                             'retired' : False})
+    cb = models.ForeignKey(Player, 
+                           related_name='cornerback', 
+                           limit_choices_to={'position' : 'CB',
+                                             'retired' : False})
+    s = models.ForeignKey(Player, 
+                          related_name='safety', 
+                          limit_choices_to={'position' : 'S',
+                                            'retired' : False})
+    p = models.ForeignKey(Player, 
+                          related_name='punter', 
+                          limit_choices_to={'position' : 'P',
+                                            'retired' : False})
+    k = models.ForeignKey(Player, 
+                          related_name='kicker', 
+                          limit_choices_to={'position' : 'K',
+                                            'retired' : False})

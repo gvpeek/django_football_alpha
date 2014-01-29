@@ -4,6 +4,8 @@ from football import views
 
 urlpatterns = patterns('',
     url(r'^$', views.index, name='index'),
+    
+    url(r'universe/create/(?P<name>\w+)/$', views.create_universe, name='create_universe'),
 
     url(r'player/(?P<player_id>\d+)/$', views.player, name='player'),
     url(r'player/create/(?P<number>\d+)/$', views.create_players, name='create_players'),
