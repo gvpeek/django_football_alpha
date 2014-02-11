@@ -1,0 +1,26 @@
+<h1>{{ team.city }} {{ team.nickname }}</h1>
+
+{% if roster %}
+	<table>
+		<thead>
+			<tr>
+				<th>Name</th>
+				<th>Position</th>
+				<th>Age</th>
+				<th>Rating</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for player in roster %}
+			<tr>
+				<td>{{ player.last_name }}, {{ player.first_name }}</td>
+				<td>{{ player.position }}</td>
+				<td>{{ player.age }}</td>
+				<td>{{ player.ratings }}</td>
+			</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+{% else %}
+	<p>No players on this team.</p>
+{% endif %}

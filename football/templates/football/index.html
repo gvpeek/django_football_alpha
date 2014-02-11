@@ -1,0 +1,9 @@
+{% if universe_list %}
+    <ul>
+    {% for universe in universe_list %}
+        <li><a href="/football/team/list/{{ universe.id }}/">{{ universe.name }}</a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No universes created.</p>
+{% endif %}
