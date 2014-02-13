@@ -1,0 +1,5 @@
+# ignore database files
+*.sqlite
+
+# ignore compiled python files
+**/*.pyc

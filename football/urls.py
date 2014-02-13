@@ -6,6 +6,7 @@ urlpatterns = patterns('',
     url(r'^$', views.index, name='index'),
     
     url(r'universe/create/(?P<name>\w+)/$', views.create_universe, name='create_universe'),
+    url(r'universe/draft/(?P<universe>\w+)/$', views.draft_players, name='draft_players'),
 
     url(r'player/(?P<player_id>\d+)/$', views.player, name='player'),
     url(r'player/create/(?P<number>\d+)/$', views.create_players, name='create_players'),
@@ -17,5 +18,9 @@ urlpatterns = patterns('',
     url(r'nickname/initialize/$', views.initialize_nicknames, name='initialize_nicknames'),
 
     url(r'team/create/(?P<level>\w+)/(?P<number>\d+)/$', views.create_teams, name='create_teams'),
+    url(r'team/list/(?P<universe_id>\d+)/$', views.show_teams, name='show_teams'),
+    url(r'team/roster/(?P<universe_id>\d+)/(?P<team_id>\d+)/$', views.show_roster, name='show_roster'),
+    
+
 
 )

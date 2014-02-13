@@ -2,18 +2,25 @@ import os
 import csv
 
 from math import floor, pow
-from random import choice, randint
+from random import choice, randint, shuffle
+from copy import deepcopy
 
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.db import transaction
+from django.template import RequestContext, loader
 
-from models import Universe, Player, Year, City, Nickname, Team
+from models import Universe, Player, Year, City, Nickname, Team, Roster
 
 import names
 
 def index(request):
-    return HttpResponse("Testing the football index page.")
+    universe_list = Universe.objects.all()
+    template = loader.get_template('football/index.html')
+    context = RequestContext(request, {
+        'universe_list' : universe_list,
+    })
+    return HttpResponse(template.render(context))
     
 def initialize_cities(request):
     cities = []
@@ -44,17 +51,47 @@ def initialize_nicknames(request):
                             )
     Nickname.objects.bulk_create(nicknames)
     return HttpResponse("Nicknames inititalized.")    
-    
+
+
+## Universe 
+
 def create_universe(request, name):
     u = Universe(name=name)
     u.save()
-    create_teams(request, 'pro', 8)
-    for x in xrange(15):
-        advance_year(request)
+    create_year(request, u, 1945)
+    create_teams(request, u, 'pro', 8)
+    for x in xrange(30):
+        advance_year(request, u)
+    Player.objects.filter(universe=u, retired=True).delete()
+    draft_players(request,
+                  universe=u)
     
     return HttpResponse("Universe %s created." % name)
 
-def create_teams(request, level, number):
+
+## Year
+    
+def create_year(request, universe, year):
+    y = Year(universe=universe,
+             year=year)
+    y.save()
+    
+    return HttpResponse("Year %s created." % year)
+
+def advance_year(request,universe):
+    y = Year.objects.get(universe=universe,current_year=True)
+    y.current_year = False
+    y.save()
+    new_year = create_year(request, universe, y.year+1)
+    age_players(request, universe, 1)
+    create_players(request, universe, 600)
+
+    return HttpResponse("Advanced one year.")
+    
+
+# Teams
+
+def create_teams(request, universe, level, number):
     if level == 'any':
         cities = City.objects.all()
         nicknames = Nickname.objects.all()
@@ -66,22 +103,85 @@ def create_teams(request, level, number):
     else:
         return HttpResponse("Invalid level for team creation.")
         
-    teams = [Team(city=choice(cities),
+    teams = [Team(universe=universe,
+                  city=choice(cities),
                   nickname=choice(nicknames),
                   human_control=False,
                   home_field_advantage=randint(1,3)) for x in xrange(int(number))]
     Team.objects.bulk_create(teams)
     
     return HttpResponse('%s teams created.' % number )
+    
+def show_teams(request, universe_id):
+    u = Universe.objects.get(id=universe_id)
+    team_list = Team.objects.filter(universe=u)
+    template = loader.get_template('football/team_list.html')
+    context = RequestContext(request, {
+        'universe' : u,
+        'team_list' : team_list,
+    })
+    return HttpResponse(template.render(context))
 
+def show_roster(request, universe_id, team_id):
+    u = Universe.objects.get(id=universe_id)
+    y = Year.objects.filter(universe=u, current_year=True)
+    t = Team.objects.get(universe=u, id=team_id)
+    r = Roster.objects.get(universe=u, team=t, year=y)
+    roster = [r.qb, r.rb, r.wr, r.og, r.c, r.ot, r.de, r.dt, r.lb, r.cb, r.s, r.k, r.p]
+    template = loader.get_template('football/roster.html')
+    context = RequestContext(request, {
+        'team' : t,
+        'roster' : roster,
+    })
+    return HttpResponse(template.render(context))
+    
+def draft_players(request,universe):
+    u = Universe.objects.get(name=universe)
+    current_year = Year.objects.get(universe=u,
+                                       current_year=True)
+    teams = Team.objects.filter(universe=u)
+    positions =['QB','RB','WR','OT','OG','C','DT','DE','LB','CB','S','K','P']
+    draft_preference = {}
+    for team in teams:
+        shuffle(positions)
+        p = positions
+        draft_preference[team] = deepcopy(p)
+        r = Roster(universe=u,
+                   year=current_year,
+                   team=team)
+        r.save()
+    draft_order=[]
+    for i in xrange(len(positions)):
+        for team in teams:
+            draft_order.append((team, draft_preference[team][i]))
+    for pick in draft_order:
+        players = Player.objects.filter(universe=u,
+                                        position=pick[1],
+                                        retired=False,
+                                        signed=False,
+                                        age__ge=23).order_by('ratings').reverse()
+        p = players[0]
+        r = Roster.objects.get(universe=u,
+                               year=current_year,
+                               team=pick[0])
+        print r,pick[1],p
+        setattr(r,pick[1].lower(),p)
+        r.save()
+        p.signed=True
+        p.save()
+        
+    return HttpResponse("Draft for %s in %s complete" % str(current_year.year), universe)
 
+# Players
+ 
 def player(request, player_id):
     player = Player.objects.get(id=player_id)
     
     return HttpResponse("You're looking at player %s - %s %s." % (player_id, player.first_name, player.last_name))
 
-def create_players(request, number):
-    players = [Player(first_name=names.first_name(),
+def create_players(request, universe, number):
+    players = [Player(universe=universe,
+                      first_name=names.first_name(),
                       last_name=names.last_name(),
                       age = 11,
                       position = choice(['QB','RB','WR','OT','OG','C','DT','DE','LB','CB','S','K','P']),
@@ -100,16 +200,16 @@ def _check_rating_range(player,range):
     if player.ratings < min(range):
         player.retired = True
     elif player.ratings > max(range):
-        player.ratings = max(range)            
-
+        player.ratings = max(range)
+        
 @transaction.commit_manually         
-def age_players(request,years):
+def age_players(request,universe, years):
     min_max_ratings = [(14,(20,50)), # (age, (min,max))
                         (18,(30,60)),
                         (22,(45,75)),
                         (99,(60,90))]
     for y in xrange(int(years)):
-        for player in Player.objects.filter(retired=False):
+        for player in Player.objects.filter(retired=False,universe=universe):
             player.age += 1
             if player.age <= player.apex_age:
                 player.ratings += randint(1,player.growth_rate)
@@ -123,14 +223,4 @@ def age_players(request,years):
         transaction.commit()
             
     return HttpResponse("Aged players %s years." % years)
-    
-def advance_year(request):
-    y = Year.objects.get(id=1)
-    y.year += 1
-    y.save()
-    age_players(request, 1)
-    create_players(request, 600)
 
-    return HttpResponse("Advanced one year.")
-
-            
