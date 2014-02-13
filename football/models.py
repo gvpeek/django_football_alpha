@@ -1,3 +1,5 @@
+import json
+
 from random import shuffle
 
 from django.db import models
@@ -77,9 +79,10 @@ class Nickname(models.Model):
     pro = models.BooleanField()
     semipro = models.BooleanField()  
 
-def _get_draft_position_order():
+def get_draft_position_order():
     order =['QB','RB','WR','OT','OG','C','DT','DE','LB','CB','S','K','P']
-    return shuffle(order)
+    shuffle(order)
+    return json.dumps(order)
 
 class Team(models.Model):
     def __unicode__(self):
@@ -91,8 +94,9 @@ class Team(models.Model):
     human_control = models.BooleanField(default=False)
     home_field_advantage = models.IntegerField(default=1)
     # draft_position_order = SeparatedValuesField(max_length=200, 
-    #                                            default=_get_draft_position_order())
-    
+    #                                             default=_get_draft_position_order())
+    draft_position_order = models.CharField(max_length=200,
+                                     default=get_draft_position_order())
     # playbook = Playbook()
     # stats = StatBook()
     # coach = Coach()

@@ -1,5 +1,6 @@
 import os
 import csv
+import json
 
 from math import floor, pow
 from random import choice, randint, shuffle
@@ -10,7 +11,8 @@ from django.http import HttpResponse
 from django.db import transaction
 from django.template import RequestContext, loader
 
-from models import Universe, Player, Year, City, Nickname, Team, Roster
+# import models
+from models import Universe, Player, Year, City, Nickname, Team, Roster, get_draft_position_order
 
 import names
 
@@ -64,7 +66,7 @@ def create_universe(request, name):
         advance_year(request, u)
     Player.objects.filter(universe=u, retired=True).delete()
     draft_players(request,
-                  universe=u)
+                  universe_id=u.id)
     
     return HttpResponse("Universe %s created." % name)
 
@@ -107,7 +109,8 @@ def create_teams(request, universe, level, number):
                   city=choice(cities),
                   nickname=choice(nicknames),
                   human_control=False,
-                  home_field_advantage=randint(1,3)) for x in xrange(int(number))]
+                  home_field_advantage=randint(1,3),
+                  draft_position_order = get_draft_position_order()) for x in xrange(int(number))]
     Team.objects.bulk_create(teams)
     
     return HttpResponse('%s teams created.' % number )
@@ -135,23 +138,23 @@ def show_roster(request, universe_id, team_id):
     })
     return HttpResponse(template.render(context))
     
-def draft_players(request,universe):
-    u = Universe.objects.get(name=universe)
+def draft_players(request,universe_id):
+    u = Universe.objects.get(id=universe_id)
     current_year = Year.objects.get(universe=u,
                                        current_year=True)
     teams = Team.objects.filter(universe=u)
-    positions =['QB','RB','WR','OT','OG','C','DT','DE','LB','CB','S','K','P']
     draft_preference = {}
+    nbr_positions = 0 
     for team in teams:
-        shuffle(positions)
-        p = positions
-        draft_preference[team] = deepcopy(p)
         r = Roster(universe=u,
                    year=current_year,
                    team=team)
         r.save()
+        draft_preference[team] = deepcopy(json.loads(team.draft_position_order))
+        if not nbr_positions:
+            nbr_positions=len(draft_preference[team])
     draft_order=[]
-    for i in xrange(len(positions)):
+    for i in xrange(nbr_positions):
         for team in teams:
             draft_order.append((team, draft_preference[team][i]))
     for pick in draft_order:
@@ -159,7 +162,7 @@ def draft_players(request,universe):
                                         position=pick[1],
                                         retired=False,
                                         signed=False,
-                                        age__ge=23).order_by('ratings').reverse()
+                                        age__gte=23).order_by('ratings').reverse()
         p = players[0]
         r = Roster.objects.get(universe=u,
                                year=current_year,
@@ -170,7 +173,7 @@ def draft_players(request,universe):
         p.signed=True
         p.save()
         
-    return HttpResponse("Draft for %s in %s complete" % str(current_year.year), universe)
+    return HttpResponse("Draft for %s in %s complete" % (str(current_year.year), u))
 
 # Players
  

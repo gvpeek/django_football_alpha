@@ -1,5 +1,5 @@
 # ignore database files
-*.sqlite
+db.sqlite3
 
 # ignore compiled python files
 **/*.pyc
