@@ -3,7 +3,7 @@ import json
 from random import shuffle
 
 from django.db import models
-from custom_fields import SeparatedValuesField
+# from custom_fields import SeparatedValuesField
 
 # from south.modelsinspector import add_introspection_rules
 # add_introspection_rules([], ["^football\.custom_fields\.SeparatedValuesField"])
@@ -190,3 +190,19 @@ class Roster(models.Model):
                           blank=True,
                           limit_choices_to={'position' : 'K',
                                             'retired' : False})
+                                            
+class League(models.Model):
+    def __unicode__(self):
+        return self.name
+        
+    universe = models.ForeignKey(Universe, related_name='league_universe')
+    name = models.CharField(max_length=100)
+    
+class LeagueMembership(models.Model):
+    def __unicode__(self):
+        return unicode(league.name) + ' ' + unicode(year.year)
+        
+    universe = models.ForeignKey(Universe, related_name='membership_universe')
+    year = models.ForeignKey(Year, related_name='membership_year')
+    league = models.ForeignKey(League, related_name='membership_league')
+    team = models.ForeignKey(Team, related_name='membership_team')
