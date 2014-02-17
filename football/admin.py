@@ -1,5 +1,6 @@
 from django.contrib import admin
-from football.models import Player, Year, City, Nickname, Team, Roster, Universe
+from football.models import Player, Year, City, Nickname, Team, Roster, Universe,
+                            League, LeagueMembership
 
 class YearAdmin(admin.ModelAdmin):
     list_display = ('year', 'current_year', 'universe')

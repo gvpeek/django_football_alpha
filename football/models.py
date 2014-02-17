@@ -93,8 +93,6 @@ class Team(models.Model):
     nickname = models.ForeignKey(Nickname)
     human_control = models.BooleanField(default=False)
     home_field_advantage = models.IntegerField(default=1)
-    # draft_position_order = SeparatedValuesField(max_length=200, 
-    #                                             default=_get_draft_position_order())
     draft_position_order = models.CharField(max_length=200,
                                      default=get_draft_position_order())
     # playbook = Playbook()
@@ -195,8 +193,15 @@ class League(models.Model):
     def __unicode__(self):
         return self.name
         
+    LEVELS = (
+        ('pro', 'Pro'),
+        ('semipro', 'Semi-Pro'),
+        ('amateur', 'Amateur'),
+    )
+    
     universe = models.ForeignKey(Universe, related_name='league_universe')
     name = models.CharField(max_length=100)
+    level = models.CharField(max_length=7,choices=LEVELS, default='pro')
     
 class LeagueMembership(models.Model):
     def __unicode__(self):
