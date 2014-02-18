@@ -211,3 +211,5 @@ class LeagueMembership(models.Model):
     year = models.ForeignKey(Year, related_name='membership_year')
     league = models.ForeignKey(League, related_name='membership_league')
     team = models.ForeignKey(Team, related_name='membership_team')
+    conference = models.IntegerField()
+    division = models.IntegerField()
