@@ -19,6 +19,13 @@ class NicknameAdmin(admin.ModelAdmin):
 class RosterAdmin(admin.ModelAdmin):
     list_display = ('year', 'team', 'qb', 'rb', 'wr', 'og', 'c', 'ot', 'dt', 'de', 'lb', 'cb', 's', 'k', 'p', 'universe')
 
+class LeagueAdmin(admin.ModelAdmin):
+    list_display = ('name', 'level', 'universe')
+
+class LeagueMembershipAdmin(admin.ModelAdmin):
+    list_display = ('league', 'year', 'conference', 'division', 'team', 'universe')
+    
+
 admin.site.register(Universe)
 admin.site.register(Year, YearAdmin)
 admin.site.register(Team, TeamAdmin)
@@ -26,5 +33,5 @@ admin.site.register(Player, PlayerAdmin)
 admin.site.register(City, CityAdmin)
 admin.site.register(Nickname, NicknameAdmin)
 admin.site.register(Roster, RosterAdmin)
-admin.site.register(League)
-admin.site.register(LeagueMembership)
+admin.site.register(League, LeagueAdmin)
+admin.site.register(LeagueMembership, LeagueMembershipAdmin)

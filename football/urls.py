@@ -21,6 +21,6 @@ urlpatterns = patterns('',
     url(r'team/list/(?P<universe_id>\d+)/$', views.show_teams, name='show_teams'),
     url(r'team/roster/(?P<universe_id>\d+)/(?P<team_id>\d+)/$', views.show_roster, name='show_roster'),
     
-
-
+    url(r'league/create/(?P<universe_id>\d+)/(?P<name>\w+)/(?P<level>\w+)/(?P<nbr_conf>\d+)/(?P<nbr_div>\d+)/(?P<nbr_teams>\d+)/(?P<nbr_playoff_teams>\d+)/$', views.create_league, name='create_league'),
+    
 )

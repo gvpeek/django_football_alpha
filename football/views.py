@@ -12,7 +12,7 @@ from django.db import transaction
 from django.template import RequestContext, loader
 
 # import models
-from models import Universe, Player, Year, City, Nickname, Team, Roster, get_draft_position_order
+from models import Universe, Player, Year, City, Nickname, Team, Roster, League, LeagueMembership, get_draft_position_order
 
 import names
 
@@ -62,6 +62,7 @@ def create_universe(request, name):
     u.save()
     create_year(request, u, 1945)
     create_teams(request, u, 'pro', 8)
+    create_league(request, u, 'AFL', 'pro', 1, 2, 8, 2)
     for x in xrange(30):
         advance_year(request, u)
     Player.objects.filter(universe=u, retired=True).delete()
@@ -227,3 +228,63 @@ def age_players(request,universe, years):
             
     return HttpResponse("Aged players %s years." % years)
 
+
+# League
+
+def create_league(request,
+                  universe_id,
+                  name,
+                  level,
+                  nbr_conf,
+                  nbr_div,
+                  nbr_teams,
+                  nbr_playoff_teams):
+    u = Universe.objects.get(id=universe_id)
+    y = Year.objects.get(universe=u,current_year=True)
+    universe_teams = Team.objects.filter(universe=u)
+    placed_teams = LeagueMembership.objects.filter(universe=u,
+                                                   year=y)
+    available_teams = set(universe_teams) - set(placed_teams)
+    conferences=[]
+    for x in xrange(int(nbr_conf)):
+        divisions = create_divisions(list(available_teams), int(nbr_div))
+        conferences.append(divisions)
+    
+    l = League(universe=u,
+               name=name,
+               level=level)
+    l.save()
+    
+    conf_nbr=0
+    div_nbr=0
+    for conference in conferences:
+        for division in divisions:
+            for team in division:
+                lm = LeagueMembership(universe=u,
+                                      year=y,
+                                      league=l,
+                                      team=team,
+                                      conference=conf_nbr,
+                                      division=div_nbr)
+                lm.save()
+            div_nbr+=1
+        conf_nbr+=1
+    
+    return HttpResponse("Created league %s." % name)
+                  
+def create_divisions(teams,nbr_div):
+    divisions=[]
+    nbr_teams=len(teams)
+    div_size=nbr_teams/nbr_div
+    remainder=nbr_teams%nbr_div
+    split_start=0
+    split_end=0
+    for x in xrange(nbr_div):
+        split_end += div_size
+        if remainder:
+            split_end += 1
+            remainder -= 1
+        divisions.append(teams[split_start:split_end])
+        split_start=split_end
+    return divisions
+    

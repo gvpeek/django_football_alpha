@@ -205,7 +205,7 @@ class League(models.Model):
     
 class LeagueMembership(models.Model):
     def __unicode__(self):
-        return unicode(league.name) + ' ' + unicode(year.year)
+        return unicode(self.league) + ' ' + unicode(self.year)
         
     universe = models.ForeignKey(Universe, related_name='membership_universe')
     year = models.ForeignKey(Year, related_name='membership_year')
