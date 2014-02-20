@@ -215,6 +215,11 @@ class LeagueMembership(models.Model):
     division = models.IntegerField()
     
 class Game(models.Model):
+    def __unicode__(self):
+        return  unicode(away_team) + ' at ' + unicode(home_team)
+        
+    universe = models.ForeignKey(Universe, related_name='game_universe')
+    year = models.ForeignKey(Year, related_name='game_year')
     home_team = models.ForeignKey(Team, related_name='game_home_team')
     away_team = models.ForeignKey(Team, related_name='game_away_team')
     number_of_periods = models.IntegerField(default=4)
