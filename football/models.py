@@ -213,3 +213,14 @@ class LeagueMembership(models.Model):
     team = models.ForeignKey(Team, related_name='membership_team')
     conference = models.IntegerField()
     division = models.IntegerField()
+    
+class Game(models.Model):
+    home_team = models.ForeignKey(Team, related_name='game_home_team')
+    away_team = models.ForeignKey(Team, related_name='game_away_team')
+    number_of_periods = models.IntegerField(default=4)
+    use_overtime = models.BooleanField()
+    number_of_overtime_periods = models.IntegerField(default=1)
+    league_game = models.BooleanField()
+    division_game = models.BooleanField()
+    conference_game = models.BooleanField()
+    playoff_game = models.BooleanField()
