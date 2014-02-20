@@ -216,7 +216,7 @@ class LeagueMembership(models.Model):
     
 class Game(models.Model):
     def __unicode__(self):
-        return unicode(away_team) + ' at ' + unicode(home_team)
+        return unicode(self.away_team) + ' at ' + unicode(self.home_team)
         
     universe = models.ForeignKey(Universe, related_name='game_universe')
     year = models.ForeignKey(Year, related_name='game_year')
@@ -232,7 +232,7 @@ class Game(models.Model):
     
 class Schedule(models.Model):
     def __unicode__(self):
-        return unicode(week) + ' - ' + unicode(game_number) + ' ' + unicode(game)
+        return unicode(self.week) + ' - ' + unicode(self.game_number) + ' ' + unicode(self.game)
     
     universe = models.ForeignKey(Universe, related_name='schedule_universe')
     year = models.ForeignKey(Year, related_name='schedule_year')

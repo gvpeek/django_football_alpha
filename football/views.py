@@ -5,6 +5,7 @@ import json
 from math import floor, pow
 from random import choice, randint, shuffle
 from copy import deepcopy
+from collections import deque
 
 from django.shortcuts import render
 from django.http import HttpResponse
@@ -12,7 +13,7 @@ from django.db import transaction
 from django.template import RequestContext, loader
 
 # import models
-from models import Universe, Player, Year, City, Nickname, Team, Roster, League, LeagueMembership, get_draft_position_order
+from models import Universe, Player, Year, City, Nickname, Team, Roster, League, LeagueMembership, get_draft_position_order, Game, Schedule
 
 import names
 
@@ -269,6 +270,8 @@ def create_league(request,
                 lm.save()
             div_nbr+=1
         conf_nbr+=1
+        
+    create_schedule(l)
     
     return HttpResponse("Created league %s." % name)
                   
@@ -287,4 +290,91 @@ def create_divisions(teams,nbr_div):
         divisions.append(teams[split_start:split_end])
         split_start=split_end
     return divisions
+    
+def create_schedule(league):
+    y = Year.objects.get(universe=league.universe,
+                         current_year=True)
+    teams = LeagueMembership.objects.filter(universe=league.universe,
+                                            year=y,
+                                            league=league)
+    structure = {}
+    for team in teams:
+        structure.setdefault(team.conference, {})
+        structure[team.conference].setdefault(team.division, [])
+        structure[team.conference][team.division].append(team.team)
+    schedule = []
+    for conference in structure.iteritems():
+        for division in conference[1].iteritems():
+            anchor_team = None
+            # 'balanced' will contain 1 if even number of teams,, 0 if odd
+            # used later to calculate number of weeks needed, since odd
+            # numbered divisions require an extra week due to each team having a bye
+            balanced = 1 - (len(division[1]) % 2)
+            nbr_weeks = len(division[1]) - balanced
+            max_weeks = 2 * nbr_weeks
+            try:
+                schedule[max_weeks]
+            except:
+                for x in xrange(max_weeks - len(schedule)):
+                    schedule.append([])
+            ## gpw is games per week
+            gpw = len(division) / 2
+            rotation1 = deque(division[1][:gpw])
+            rotation2 = deque(division[1][gpw:])
+            if balanced:
+                anchor_team = rotation1.popleft()
+            for week in range(nbr_weeks):
+                if anchor_team:
+                    schedule[week].append(Game(universe=league.universe,
+                                               year=y,
+                                               home_team=anchor_team, 
+                                               away_team=rotation2[-1],
+                                               use_overtime = False,
+                                               league_game = False,
+                                               division_game = False,
+                                               conference_game = False,
+                                               playoff_game = False))
+                    schedule[week+nbr_weeks].append(Game(universe=league.universe,
+                                                         year=y,
+                                                         home_team=rotation2[-1], 
+                                                         away_team=anchor_team,
+                                                         use_overtime = False,
+                                                         league_game = False,
+                                                         division_game = False,
+                                                         conference_game = False,
+                                                         playoff_game = False))
+                for t1, t2 in zip(rotation1,rotation2):
+                    schedule[week].append(Game(universe=league.universe,
+                                               year=y,
+                                               home_team=t1,
+                                               away_team=t2,
+                                               use_overtime = False,
+                                               league_game = False,
+                                               division_game = False,
+                                               conference_game = False,
+                                               playoff_game = False))
+                    schedule[week+nbr_weeks].append(Game(universe=league.universe,
+                                                         year=y,
+                                                         home_team=t2,
+                                                         away_team=t1,
+                                                         use_overtime = False,
+                                                         league_game = False,
+                                                         division_game = False,
+                                                         conference_game = False,
+                                                         playoff_game = False))
+
+                rotation1.append(rotation2.pop())
+                rotation2.appendleft(rotation1.popleft())
+
+        for week in schedule:
+            for game in week:
+                game.save()
+                s = Schedule(universe=league.universe,
+                                               year=y,
+                                               league=league,
+                                               game=game,
+                                               week=schedule.index(week) + 1,
+                                               game_number=week.index(game) + 1)
+                s.save()
+    
     
