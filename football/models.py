@@ -216,7 +216,7 @@ class LeagueMembership(models.Model):
     
 class Game(models.Model):
     def __unicode__(self):
-        return  unicode(away_team) + ' at ' + unicode(home_team)
+        return unicode(away_team) + ' at ' + unicode(home_team)
         
     universe = models.ForeignKey(Universe, related_name='game_universe')
     year = models.ForeignKey(Year, related_name='game_year')
@@ -229,3 +229,14 @@ class Game(models.Model):
     division_game = models.BooleanField()
     conference_game = models.BooleanField()
     playoff_game = models.BooleanField()
+    
+class Schedule(models.Model):
+    def __unicode__(self):
+        return unicode(week) + ' - ' + unicode(game_number) + ' ' + unicode(game)
+    
+    universe = models.ForeignKey(Universe, related_name='schedule_universe')
+    year = models.ForeignKey(Year, related_name='schedule_year')
+    league = models.ForeignKey(League, related_name='schedule_league')
+    game = models.ForeignKey(Game, related_name='schedule_game')
+    week = models.IntegerField()
+    game_number = models.IntegerField()
