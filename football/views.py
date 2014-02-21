@@ -303,14 +303,14 @@ def create_schedule(league):
         structure[team.conference].setdefault(team.division, [])
         structure[team.conference][team.division].append(team.team)
     schedule = []
-    for conference in structure.iteritems():
-        for division in conference[1].iteritems():
+    for conference, divisions in structure.iteritems():
+        for div_nbr, division in divisions.iteritems():
             anchor_team = None
             # 'balanced' will contain 1 if even number of teams,, 0 if odd
             # used later to calculate number of weeks needed, since odd
             # numbered divisions require an extra week due to each team having a bye
-            balanced = 1 - (len(division[1]) % 2)
-            nbr_weeks = len(division[1]) - balanced
+            balanced = 1 - (len(division) % 2)
+            nbr_weeks = len(division) - balanced
             max_weeks = 2 * nbr_weeks
             try:
                 schedule[max_weeks]
@@ -319,8 +319,8 @@ def create_schedule(league):
                     schedule.append([])
             ## gpw is games per week
             gpw = len(division) / 2
-            rotation1 = deque(division[1][:gpw])
-            rotation2 = deque(division[1][gpw:])
+            rotation1 = deque(division[:gpw])
+            rotation2 = deque(division[gpw:])
             if balanced:
                 anchor_team = rotation1.popleft()
             for week in range(nbr_weeks):

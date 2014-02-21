@@ -29,7 +29,7 @@ class GameAdmin(admin.ModelAdmin):
     list_display = ('away_team', 'home_team', 'year', 'universe') 
 
 class ScheduleAdmin(admin.ModelAdmin):
-    list_display = ('week', 'game_number', 'game')   
+    list_display = ('week', 'game_number', 'game', 'year', 'league')   
 
 admin.site.register(Universe)
 admin.site.register(Year, YearAdmin)
