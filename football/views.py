@@ -12,6 +12,11 @@ from django.http import HttpResponse
 from django.db import transaction
 from django.template import RequestContext, loader
 
+from game import Game as GameDay
+from coach import Coach # workaround, remove this when fixed
+from playbook import Playbook # workaround, remove this when fixed
+from stats import StatBook # workaround, remove this when fixed
+
 # import models
 from models import Universe, Player, Year, City, Nickname, Team, Roster, League, LeagueMembership, get_draft_position_order, Game, Schedule
 
@@ -272,6 +277,7 @@ def create_league(request,
         conf_nbr+=1
         
     create_schedule(l)
+    play_season(u,y,l)
     
     return HttpResponse("Created league %s." % name)
                   
@@ -377,4 +383,37 @@ def create_schedule(league):
                                                game_number=week.index(game) + 1)
                 s.save()
     
-    
+def play_season(universe,year,league):
+    schedule = Schedule.objects.filter(universe=universe,
+                                       year=year,
+                                       league=league)
+    for item in schedule:
+        g = Game.objects.get(id=item.game.id)
+        add_fields_to_team(g.home_team, g)
+        add_fields_to_team(g.away_team, g)
+        game = GameDay(g.home_team, g.away_team)
+        game.start_game()
+        print game.get_away_team().team.city, game.get_away_team().statbook.stats['score_by_period'], game.get_away_team().statbook.stats['score']
+        print game.get_home_team().team.city, game.get_home_team().statbook.stats['score_by_period'], game.get_home_team().statbook.stats['score']
+        print
+        
+def add_fields_to_team(team, game):
+    roster = Roster.objects.get(universe=game.universe,
+                                     year=game.year,
+                                     team=team)
+    team.skills = {'qb': roster.qb.ratings,
+                   'rb': roster.rb.ratings,
+                   'wr': roster.wr.ratings,
+                   'ol': ((roster.og.ratings + roster.c.ratings + roster.ot.ratings) / 3),
+                   'dl': ((roster.dt.ratings + roster.de.ratings) / 2),
+                   'lb': roster.lb.ratings,
+                   'cb': roster.cb.ratings,
+                   's': roster.s.ratings,
+                   'p': roster.p.ratings,
+                   'k': roster.k.ratings,
+                   'sp': roster.wr.ratings}
+    team.primary_color = (randint(0,255),randint(0,255),randint(0,255))
+    team.secondary_color = (randint(0,255),randint(0,255),randint(0,255))
+    team.coach = Coach()
+    team.playbook = Playbook()
+    team.stats = StatBook()
