@@ -68,6 +68,7 @@ class Coach(models.Model):
     def __unicode__(self):
         return self.last_name + ', ' + self.first_name
     
+    universe = models.ForeignKey(Universe, related_name='coach_universe')
     first_name = models.CharField(max_length=60)
     last_name = models.CharField(max_length=60)
     skill = models.IntegerField()
