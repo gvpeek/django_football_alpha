@@ -1,5 +1,5 @@
 from django.contrib import admin
-from football.models import Player, Year, City, Nickname, Team, Roster, Universe, League, LeagueMembership, Game, Schedule
+from football.models import Player, Year, City, Nickname, Team, Roster, Universe, League, LeagueMembership, Game, Schedule, Coach
 
 class YearAdmin(admin.ModelAdmin):
     list_display = ('year', 'current_year', 'universe')
@@ -29,7 +29,10 @@ class GameAdmin(admin.ModelAdmin):
     list_display = ('away_team', 'home_team', 'year', 'universe') 
 
 class ScheduleAdmin(admin.ModelAdmin):
-    list_display = ('week', 'game_number', 'game', 'year', 'league')   
+    list_display = ('week', 'game_number', 'game', 'year', 'league')  
+    
+class CoachAdmin(admin.ModelAdmin):
+    list_display = ('skill', 'play_probabilities', 'fg_dist_probabilities') 
 
 admin.site.register(Universe)
 admin.site.register(Year, YearAdmin)
@@ -42,3 +45,4 @@ admin.site.register(League, LeagueAdmin)
 admin.site.register(LeagueMembership, LeagueMembershipAdmin)
 admin.site.register(Game, GameAdmin)
 admin.site.register(Schedule, ScheduleAdmin)
+admin.site.register(Coach, CoachAdmin)

@@ -13,12 +13,12 @@ from django.db import transaction
 from django.template import RequestContext, loader
 
 from game import Game as GameDay
-from coach import Coach # workaround, remove this when fixed
+# from coach import Coach # workaround, remove this when fixed
 from playbook import Playbook # workaround, remove this when fixed
 from stats import StatBook # workaround, remove this when fixed
 
 # import models
-from models import Universe, Player, Year, City, Nickname, Team, Roster, League, LeagueMembership, get_draft_position_order, Game, Schedule
+from models import Universe, Player, Year, City, Nickname, Team, Roster, League, LeagueMembership, get_draft_position_order, Game, Schedule, Coach
 
 import names
 
@@ -414,6 +414,5 @@ def add_fields_to_team(team, game):
                    'sp': roster.wr.ratings}
     team.primary_color = (randint(0,255),randint(0,255),randint(0,255))
     team.secondary_color = (randint(0,255),randint(0,255),randint(0,255))
-    team.coach = Coach()
     team.playbook = Playbook()
     team.stats = StatBook()
