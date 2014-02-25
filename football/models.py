@@ -2,13 +2,9 @@ import json
 
 from math import ceil
 from random import shuffle, random, choice
-# from collections import namedtuple
 
 from django.db import models
-# from custom_fields import SeparatedValuesField
 
-# from south.modelsinspector import add_introspection_rules
-# add_introspection_rules([], ["^football\.custom_fields\.SeparatedValuesField"])
 
 class Universe(models.Model):
     def __unicode__(self):
@@ -27,6 +23,12 @@ class Year(models.Model):
     class Meta:
         unique_together = ('year','universe')
 
+class Playbook(models.Model):
+    def __unicode__(self):
+        return self.name
+        
+    name = models.CharField(max_length=60)
+    plays = models.CharField(max_length=10000)
 
 # People
 
@@ -75,8 +77,10 @@ class Coach(models.Model):
     play_probabilities = models.CharField(max_length=2000)
     fg_dist_probabilities = models.CharField(max_length=1000)
 
-    def practice_plays(self,playbook,skills):
+    def practice_plays(self,coach,playbook,skills):
 #        results = namedtuple('PracticeResults',['id','runs','success','total_yardage','success_yardage','turnover'])
+        play_outcomes = {}
+        fg_outcomes = {}
         for play in playbook:
             runs=[]
             success=0
@@ -84,7 +88,7 @@ class Coach(models.Model):
             success_yardage=0
             turnover=0
             if (play.is_rush() or play.is_pass()) and not play.id=='RC':
-                for x in range(self.skill):
+                for x in range(coach.skill):
                     yds,trn = play.run(skills,{'dl':50,'lb':50,'cb':50,'s':50},0)
                     if trn:
                         turnover += 1
@@ -94,15 +98,16 @@ class Coach(models.Model):
                         success_yardage += yds
                     runs.append(yds)
                 total_yardage = sum(runs)
-                self.play_probabilities[play.id]={k: (len([i for i in runs if i >= k])/float(len(runs)))*100 for k in range(1,52)}
+                play_outcomes[play.id]={k: (len([i for i in runs if i >= k])/float(len(runs)))*100 for k in range(1,52)}
             elif play.is_field_goal():
                     kicks=[]
-                    for x in range((self.skill / 2)):
+                    for x in range((coach.skill / 2)):
                         yds,trn = play.run(skills,{'sp':50},0)
                         kicks.append(yds)
                     max_dist = max(kicks)
-                    self.fg_dist_probabilities={k: (len([i for i in kicks if i >= k])/float(len(kicks)))*100 for k in range(1,61)}
-
+                    fg_outcomes={k: (len([i for i in kicks if i >= k])/float(len(kicks)))*100 for k in range(1,61)}
+        coach.play_probabilities=json.dumps(play_outcomes)
+        coach.fg_dist_probabilities=json.dumps(fg_outcomes)
                         
     def call_play(self,
                   available_plays,

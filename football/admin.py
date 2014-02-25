@@ -1,11 +1,11 @@
 from django.contrib import admin
-from football.models import Player, Year, City, Nickname, Team, Roster, Universe, League, LeagueMembership, Game, Schedule, Coach
+from football.models import Player, Year, City, Nickname, Team, Roster, Universe, League, LeagueMembership, Game, Schedule, Coach, Playbook
 
 class YearAdmin(admin.ModelAdmin):
     list_display = ('year', 'current_year', 'universe')
 
 class TeamAdmin(admin.ModelAdmin):
-    list_display = ('city', 'nickname', 'human_control', 'home_field_advantage', 'universe')
+    list_display = ('city', 'nickname', 'human_control', 'home_field_advantage', 'coach', 'universe')
 
 class PlayerAdmin(admin.ModelAdmin):
     list_display = ('last_name', 'first_name', 'position', 'ratings', 'age', 'signed', 'retired', 'universe',)
@@ -32,7 +32,10 @@ class ScheduleAdmin(admin.ModelAdmin):
     list_display = ('week', 'game_number', 'game', 'year', 'league')  
     
 class CoachAdmin(admin.ModelAdmin):
-    list_display = ('skill', 'play_probabilities', 'fg_dist_probabilities') 
+    list_display = ('first_name', 'last_name', 'skill', 'play_probabilities', 'fg_dist_probabilities') 
+
+class PlaybookAdmin(admin.ModelAdmin):
+    list_display = ('name', 'plays')
 
 admin.site.register(Universe)
 admin.site.register(Year, YearAdmin)
@@ -46,3 +49,4 @@ admin.site.register(LeagueMembership, LeagueMembershipAdmin)
 admin.site.register(Game, GameAdmin)
 admin.site.register(Schedule, ScheduleAdmin)
 admin.site.register(Coach, CoachAdmin)
+admin.site.register(Playbook, PlaybookAdmin)

@@ -8,6 +8,8 @@ urlpatterns = patterns('',
     url(r'universe/create/(?P<name>\w+)/$', views.create_universe, name='create_universe'),
     url(r'universe/draft/(?P<universe_id>\d+)/$', views.draft_players, name='draft_players'),
 
+    url(r'playbook/create/$', views.create_playbook, name='create_playbook'),
+
     url(r'player/(?P<player_id>\d+)/$', views.player, name='player'),
     url(r'player/create/(?P<number>\d+)/$', views.create_players, name='create_players'),
     url(r'player/age/(?P<years>\d+)/$', views.age_players, name='age_players'),

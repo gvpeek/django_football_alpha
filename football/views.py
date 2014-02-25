@@ -1,6 +1,7 @@
 import os
 import csv
 import json
+import pickle
 
 from math import floor, pow
 from random import choice, randint, shuffle
@@ -14,11 +15,11 @@ from django.template import RequestContext, loader
 
 from game import Game as GameDay
 # from coach import Coach # workaround, remove this when fixed
-from playbook import Playbook # workaround, remove this when fixed
+from playbook import Playbook as PlaybookInit # workaround, remove this when fixed
 from stats import StatBook # workaround, remove this when fixed
 
 # import models
-from models import Universe, Player, Year, City, Nickname, Team, Roster, League, LeagueMembership, get_draft_position_order, Game, Schedule, Coach
+from models import Universe, Player, Year, City, Nickname, Team, Roster, League, LeagueMembership, get_draft_position_order, Game, Schedule, Coach, Playbook
 
 import names
 
@@ -68,7 +69,7 @@ def create_universe(request, name):
     u.save()
     create_year(request, u, 1945)
     create_teams(request, u, 'pro', 8)
-    create_league(request, u, 'AFL', 'pro', 1, 2, 8, 2)
+    create_league(request, u.id, 'AFL', 'pro', 1, 2, 8, 2)
     for x in xrange(30):
         advance_year(request, u)
     Player.objects.filter(universe=u, retired=True).delete()
@@ -96,7 +97,17 @@ def advance_year(request,universe):
     create_players(request, universe, 600)
 
     return HttpResponse("Advanced one year.")
+
+
+# Game
+
+def create_playbook(request):
+    p = Playbook(name='Basic',
+                 plays=json.dumps(pickle.dumps(PlaybookInit())))
+    p.save()
     
+    return HttpResponse("Playbook created")
+        
 
 # Teams
 
@@ -112,12 +123,22 @@ def create_teams(request, universe, level, number):
     else:
         return HttpResponse("Invalid level for team creation.")
         
+    coaches = [Coach(universe=universe,
+                    first_name=names.first_name(),
+                    last_name=names.last_name(),
+                    skill=randint(60,90),
+                    play_probabilities = json.dumps({}),
+                    fg_dist_probabilities = json.dumps({})
+                    ) for x in xrange(int(number))]
+    for coach in coaches:
+        coach.save()
     teams = [Team(universe=universe,
                   city=choice(cities),
                   nickname=choice(nicknames),
                   human_control=False,
                   home_field_advantage=randint(1,3),
-                  draft_position_order = get_draft_position_order()) for x in xrange(int(number))]
+                  draft_position_order = get_draft_position_order(),
+                  coach = coaches.pop()) for x in xrange(int(number))]
     Team.objects.bulk_create(teams)
     
     return HttpResponse('%s teams created.' % number )
@@ -179,8 +200,13 @@ def draft_players(request,universe_id):
         r.save()
         p.signed=True
         p.save()
+
+    create_coaching_tendencies()
         
     return HttpResponse("Draft for %s in %s complete" % (str(current_year.year), u))
+
+def create_coaching_tendencies():
+    pass
 
 # Players
  
@@ -277,7 +303,7 @@ def create_league(request,
         conf_nbr+=1
         
     create_schedule(l)
-    play_season(u,y,l)
+    play_season(l)
     
     return HttpResponse("Created league %s." % name)
                   
@@ -383,9 +409,11 @@ def create_schedule(league):
                                                game_number=week.index(game) + 1)
                 s.save()
     
-def play_season(universe,year,league):
-    schedule = Schedule.objects.filter(universe=universe,
-                                       year=year,
+def play_season(league):
+    y = Year.objects.get(universe=league.universe,
+                         current_year=True)
+    schedule = Schedule.objects.filter(universe=league.universe,
+                                       year=y,
                                        league=league)
     for item in schedule:
         g = Game.objects.get(id=item.game.id)
@@ -414,5 +442,12 @@ def add_fields_to_team(team, game):
                    'sp': roster.wr.ratings}
     team.primary_color = (randint(0,255),randint(0,255),randint(0,255))
     team.secondary_color = (randint(0,255),randint(0,255),randint(0,255))
-    team.playbook = Playbook()
+    p = Playbook.objects.get(id=1)
+    p = json.loads(p.plays)
+    p = pickle.loads(p)
+    team.playbook = p
+    team.coach.practice_plays(team.coach,team.playbook,team.skills)
+    team.coach.save()
+    team.coach.play_probabilities = json.loads(team.coach.play_probabilities)
+    team.coach.fg_dist_probabilities = json.loads(team.coach.fg_dist_probabilities)
     team.stats = StatBook()
