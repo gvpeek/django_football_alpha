@@ -170,7 +170,7 @@ class Game():
     
     def get_available_plays(self):
         available_plays={}
-        for play in self.possession.offense.team.playbook:
+        for play in self.possession.offense.team.plays:
             if isinstance(self.current_state,(play.valid_states)) and (self.field.get_distance_to_endzone()) > play.valid_yardline:
                 available_plays[play.id]=play
         return available_plays

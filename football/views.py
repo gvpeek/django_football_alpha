@@ -7,6 +7,7 @@ from math import floor, pow
 from random import choice, randint, shuffle
 from copy import deepcopy
 from collections import deque
+from ast import literal_eval
 
 from django.shortcuts import render
 from django.http import HttpResponse
@@ -19,7 +20,7 @@ from playbook import Playbook as PlaybookInit # workaround, remove this when fix
 from stats import StatBook # workaround, remove this when fixed
 
 # import models
-from models import Universe, Player, Year, City, Nickname, Team, Roster, League, LeagueMembership, get_draft_position_order, Game, Schedule, Coach, Playbook
+from models import Universe, Player, Year, City, Nickname, Team, Roster, League, LeagueMembership, get_draft_position_order, Game, Schedule, Coach, Playbook, TeamStats
 
 import names
 
@@ -68,13 +69,11 @@ def create_universe(request, name):
     u = Universe(name=name)
     u.save()
     create_year(request, u, 1945)
-    create_teams(request, u, 'pro', 8)
-    create_league(request, u.id, 'AFL', 'pro', 1, 2, 8, 2)
     for x in xrange(30):
         advance_year(request, u)
     Player.objects.filter(universe=u, retired=True).delete()
-    draft_players(request,
-                  universe_id=u.id)
+    create_teams(request, u, 'pro', 8)
+    create_league(request, u.id, 'AFL', 'pro', 1, 2, 8, 2)
     
     return HttpResponse("Universe %s created." % name)
 
@@ -138,7 +137,8 @@ def create_teams(request, universe, level, number):
                   human_control=False,
                   home_field_advantage=randint(1,3),
                   draft_position_order = get_draft_position_order(),
-                  coach = coaches.pop()) for x in xrange(int(number))]
+                  coach = coaches.pop(),
+                  playbook = Playbook.objects.get(id=1)) for x in xrange(int(number))]
     Team.objects.bulk_create(teams)
     
     return HttpResponse('%s teams created.' % number )
@@ -166,15 +166,14 @@ def show_roster(request, universe_id, team_id):
     })
     return HttpResponse(template.render(context))
     
-def draft_players(request,universe_id):
-    u = Universe.objects.get(id=universe_id)
-    current_year = Year.objects.get(universe=u,
+def draft_players(universe):
+    current_year = Year.objects.get(universe=universe,
                                        current_year=True)
-    teams = Team.objects.filter(universe=u)
+    teams = Team.objects.filter(universe=universe)
     draft_preference = {}
     nbr_positions = 0 
     for team in teams:
-        r = Roster(universe=u,
+        r = Roster(universe=universe,
                    year=current_year,
                    team=team)
         r.save()
@@ -186,16 +185,15 @@ def draft_players(request,universe_id):
         for team in teams:
             draft_order.append((team, draft_preference[team][i]))
     for pick in draft_order:
-        players = Player.objects.filter(universe=u,
+        players = Player.objects.filter(universe=universe,
                                         position=pick[1],
                                         retired=False,
                                         signed=False,
                                         age__gte=23).order_by('ratings').reverse()
         p = players[0]
-        r = Roster.objects.get(universe=u,
+        r = Roster.objects.get(universe=universe,
                                year=current_year,
                                team=pick[0])
-        print r,pick[1],p
         setattr(r,pick[1].lower(),p)
         r.save()
         p.signed=True
@@ -203,7 +201,7 @@ def draft_players(request,universe_id):
 
     create_coaching_tendencies()
         
-    return HttpResponse("Draft for %s in %s complete" % (str(current_year.year), u))
+    return HttpResponse("Draft for %s in %s complete" % (str(current_year.year), universe))
 
 def create_coaching_tendencies():
     pass
@@ -301,7 +299,8 @@ def create_league(request,
                 lm.save()
             div_nbr+=1
         conf_nbr+=1
-        
+
+    draft_players(u)        
     create_schedule(l)
     play_season(l)
     
@@ -424,6 +423,7 @@ def play_season(league):
         print game.get_away_team().team.city, game.get_away_team().statbook.stats['score_by_period'], game.get_away_team().statbook.stats['score']
         print game.get_home_team().team.city, game.get_home_team().statbook.stats['score_by_period'], game.get_home_team().statbook.stats['score']
         print
+        update_stats(g, game)
         
 def add_fields_to_team(team, game):
     roster = Roster.objects.get(universe=game.universe,
@@ -445,9 +445,41 @@ def add_fields_to_team(team, game):
     p = Playbook.objects.get(id=1)
     p = json.loads(p.plays)
     p = pickle.loads(p)
-    team.playbook = p
-    team.coach.practice_plays(team.coach,team.playbook,team.skills)
+    team.plays = p
+    team.coach.practice_plays(team.coach,team.plays,team.skills)
     team.coach.save()
     team.coach.play_probabilities = json.loads(team.coach.play_probabilities)
     team.coach.fg_dist_probabilities = json.loads(team.coach.fg_dist_probabilities)
     team.stats = StatBook()
+    
+# Stats
+
+def update_stats(db_game, game):
+    stats = [[db_game.home_team, game.get_home_team().statbook.stats],
+             [db_game.away_team, game.get_away_team().statbook.stats]]
+    for db_team, game_stats in stats:
+        try:
+            ts = TeamStats.objects.get(universe=db_game.universe,
+                                       year=db_game.year,
+                                       team=db_team)
+        except:
+            ts = TeamStats(universe=db_game.universe,
+                           year=db_game.year,
+                           team=db_team)
+            ts.save()
+        for key, game_value in game_stats.iteritems():
+            db_value = getattr(ts,key)
+            ## @TODO fix this to check type
+            if key == 'completion_pct':
+                db_value = float(db_value)
+            ## @TODO fix this to check type
+            if key == 'score_by_period':
+                db_value = literal_eval(db_value)
+                while len(db_value) < len(game_value):
+                    db_value.append(0)
+                db_value = [x+y for x,y in zip(db_value,game_value)]
+            else:
+                db_value += game_value
+            setattr(ts,key,db_value)
+        ts.save()
+    

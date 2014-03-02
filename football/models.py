@@ -245,12 +245,9 @@ class Team(models.Model):
     draft_position_order = models.CharField(max_length=200,
                                      default=get_draft_position_order())
     coach = models.ForeignKey(Coach, related_name='team_coach')
-    # playbook = Playbook()
-    # stats = StatBook()
-    # coach.practice_plays(self.playbook,self.skills)
-    #     
-    # primary_color = (randint(0,255),randint(0,255),randint(0,255))
-    # secondary_color = (randint(0,255),randint(0,255),randint(0,255))
+    playbook = models.ForeignKey(Playbook, related_name='team_playbook') 
+    primary_color  = models.CommaSeparatedIntegerField(max_length=30)
+    secondary_color = models.CommaSeparatedIntegerField(max_length=30)
 
 class Roster(models.Model):
     def __unicode__(self):
@@ -392,3 +389,49 @@ class Schedule(models.Model):
     game = models.ForeignKey(Game, related_name='schedule_game')
     week = models.IntegerField()
     game_number = models.IntegerField()
+    
+
+# Stats
+
+class TeamStats(models.Model):
+    def __unicode__(self):
+        return unicode(self.team) + ' ' + unicode(self.year)
+            
+    universe = models.ForeignKey(Universe,related_name='teamstats_universe')
+    year = models.ForeignKey(Year, related_name='teamstats_year')
+    team = models.ForeignKey(Team, related_name='teamstats_team')
+    score = models.IntegerField(default=0)
+    score_by_period = models.CommaSeparatedIntegerField(max_length=30, default=[0,0,0,0])
+    total_yards = models.IntegerField(default=0)
+    pass_att = models.IntegerField(default=0)
+    pass_comp = models.IntegerField(default=0)
+    completion_pct = models.DecimalField(max_digits=3, decimal_places=2, default=0.00)
+    pass_yards = models.IntegerField(default=0)
+    pass_td = models.IntegerField(default=0)
+    intercepted = models.IntegerField(default=0)
+    sacked = models.IntegerField(default=0)
+    rush_att = models.IntegerField(default=0)
+    rush_yards = models.IntegerField(default=0)
+    rush_td = models.IntegerField(default=0)
+    fumbles = models.IntegerField(default=0)
+    fg_att = models.IntegerField(default=0)
+    fg = models.IntegerField(default=0)
+    xp_att = models.IntegerField(default=0)
+    xp = models.IntegerField(default=0)
+    conv_att = models.IntegerField(default=0)
+    conv = models.IntegerField(default=0)
+    punts = models.IntegerField(default=0)
+    punt_yards = models.IntegerField(default=0)
+    punt_touchbacks = models.IntegerField(default=0)
+    punt_blocks = models.IntegerField(default=0)
+    punt_returns = models.IntegerField(default=0)
+    punt_return_yards = models.IntegerField(default=0)
+    kickoffs = models.IntegerField(default=0)
+    kickoff_yards = models.IntegerField(default=0)
+    kickoff_touchbacks = models.IntegerField(default=0)
+    kick_returns = models.IntegerField(default=0)
+    kick_return_yards = models.IntegerField(default=0)
+    safeties = models.IntegerField(default=0)
+    # 
+    # class Meta:
+    #     unique_together = ('year','universe','team')

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from football.models import Player, Year, City, Nickname, Team, Roster, Universe, League, LeagueMembership, Game, Schedule, Coach, Playbook
+from football.models import Player, Year, City, Nickname, Team, Roster, Universe, League, LeagueMembership, Game, Schedule, Coach, Playbook, TeamStats
 
 class YearAdmin(admin.ModelAdmin):
     list_display = ('year', 'current_year', 'universe')
@@ -7,8 +7,14 @@ class YearAdmin(admin.ModelAdmin):
 class TeamAdmin(admin.ModelAdmin):
     list_display = ('city', 'nickname', 'human_control', 'home_field_advantage', 'coach', 'universe')
 
+def make_free_agent(modeladmin, request, queryset):
+    queryset.update(signed=False)
+make_free_agent.short_description = "Make selected players free agents"
+
 class PlayerAdmin(admin.ModelAdmin):
     list_display = ('last_name', 'first_name', 'position', 'ratings', 'age', 'signed', 'retired', 'universe',)
+
+    actions = [make_free_agent]
 
 class CityAdmin(admin.ModelAdmin):
     list_display = ('name', 'state', 'pro', 'semipro', 'amateur', 'region', 'division')
@@ -37,6 +43,9 @@ class CoachAdmin(admin.ModelAdmin):
 class PlaybookAdmin(admin.ModelAdmin):
     list_display = ('name', 'plays')
 
+class TeamStatsAdmin(admin.ModelAdmin):
+    list_display = ('team', 'year', 'score', 'score_by_period', 'total_yards', 'pass_att',  'pass_comp', 'completion_pct', 'pass_yards', 'pass_td',  'intercepted', 'sacked', 'rush_att', 'rush_yards', 'rush_td')
+
 admin.site.register(Universe)
 admin.site.register(Year, YearAdmin)
 admin.site.register(Team, TeamAdmin)
@@ -50,3 +59,4 @@ admin.site.register(Game, GameAdmin)
 admin.site.register(Schedule, ScheduleAdmin)
 admin.site.register(Coach, CoachAdmin)
 admin.site.register(Playbook, PlaybookAdmin)
+admin.site.register(TeamStats, TeamStatsAdmin)
