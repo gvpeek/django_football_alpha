@@ -44,7 +44,7 @@ class PlaybookAdmin(admin.ModelAdmin):
     list_display = ('name', 'plays')
 
 class TeamStatsAdmin(admin.ModelAdmin):
-    list_display = ('team', 'year', 'score', 'score_by_period', 'total_yards', 'pass_att',  'pass_comp', 'completion_pct', 'pass_yards', 'pass_td',  'intercepted', 'sacked', 'rush_att', 'rush_yards', 'rush_td')
+    list_display = ('team', 'year', 'wins', 'losses', 'ties', 'pct', 'score', 'score_by_period', 'total_yards', 'pass_att',  'pass_comp', 'completion_pct', 'pass_yards', 'pass_td',  'intercepted', 'sacked', 'rush_att', 'rush_yards', 'rush_td', 'universe')
 
 admin.site.register(Universe)
 admin.site.register(Year, YearAdmin)

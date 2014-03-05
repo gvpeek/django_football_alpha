@@ -1,0 +1,36 @@
+{% if league_name and year %}
+	<h1>{{ league_name }} - {{ year }}</h1>
+{% endif %}
+
+{% if standings %}
+	<table>
+		<thead>
+			<tr>
+				<th></th>
+				<th>W</th>
+				<th>L</th>
+				<th>T</th>
+				<th>Pct.</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for conference in standings %}
+				{% for division in conference %}
+					{% for team in division %}
+					<tr>
+						<td>{{ team.team }}</td>
+						<td>{{ team.wins }}</td>
+						<td>{{ team.losses }}</td>
+						<td>{{ team.ties }}</td>
+						<td>{{ team.pct }}</td>
+					</tr>
+					{% endfor %}
+				{% endfor %}
+			{% endfor %}
+		</tbody>
+	</table>
+{% else %}
+	<p>No standings for this league.</p>
+{% endif %}
+				
+					

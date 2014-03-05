@@ -400,6 +400,9 @@ class TeamStats(models.Model):
     universe = models.ForeignKey(Universe,related_name='teamstats_universe')
     year = models.ForeignKey(Year, related_name='teamstats_year')
     team = models.ForeignKey(Team, related_name='teamstats_team')
+    wins = models.IntegerField(default=0)
+    losses = models.IntegerField(default=0)
+    ties = models.IntegerField(default=0)
     score = models.IntegerField(default=0)
     score_by_period = models.CommaSeparatedIntegerField(max_length=30, default=[0,0,0,0])
     total_yards = models.IntegerField(default=0)
@@ -432,6 +435,12 @@ class TeamStats(models.Model):
     kick_returns = models.IntegerField(default=0)
     kick_return_yards = models.IntegerField(default=0)
     safeties = models.IntegerField(default=0)
+    
+    def _get_pct(self):
+        # calculates winning percentage
+        return (self.wins + (self.ties / 2.0)) / (float(self.wins + self.losses + self.ties))
+    pct = property(_get_pct)
+
     # 
     # class Meta:
     #     unique_together = ('year','universe','team')

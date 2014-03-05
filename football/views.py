@@ -2,6 +2,7 @@ import os
 import csv
 import json
 import pickle
+import operator
 
 from math import floor, pow
 from random import choice, randint, shuffle
@@ -68,7 +69,7 @@ def initialize_nicknames(request):
 def create_universe(request, name):
     u = Universe(name=name)
     u.save()
-    create_year(request, u, 1945)
+    create_year(u, 1945)
     for x in xrange(30):
         advance_year(request, u)
     Player.objects.filter(universe=u, retired=True).delete()
@@ -80,23 +81,28 @@ def create_universe(request, name):
 
 ## Year
     
-def create_year(request, universe, year):
+def create_year(universe, year):
     y = Year(universe=universe,
              year=year)
     y.save()
     
-    return HttpResponse("Year %s created." % year)
+    return y
 
 def advance_year(request,universe):
     y = Year.objects.get(universe=universe,current_year=True)
     y.current_year = False
     y.save()
-    new_year = create_year(request, universe, y.year+1)
+    new_year = create_year(universe, y.year+1)
     age_players(request, universe, 1)
     create_players(request, universe, 600)
+    # copy_rosters(universe, new_year)
 
     return HttpResponse("Advanced one year.")
 
+# def copy_rosters(universe, year):
+#     current_rosters = Roster.objects.filter(universe=universe, year=year)
+#     for roster in current
+#     new_roster=
 
 # Game
 
@@ -164,8 +170,8 @@ def show_roster(request, universe_id, team_id):
         'team' : t,
         'roster' : roster,
     })
-    return HttpResponse(template.render(context))
-    
+    return HttpResponse(template.render(context)) 
+   
 def draft_players(universe):
     current_year = Year.objects.get(universe=universe,
                                        current_year=True)
@@ -451,24 +457,102 @@ def add_fields_to_team(team, game):
     team.coach.play_probabilities = json.loads(team.coach.play_probabilities)
     team.coach.fg_dist_probabilities = json.loads(team.coach.fg_dist_probabilities)
     team.stats = StatBook()
+
+def show_leagues(request, universe_id):
+    u = Universe.objects.get(id=universe_id)
+    leagues = League.objects.filter(universe=u)
+    
+    template = loader.get_template('football/league_list.html')
+    context = RequestContext(request, {
+        'league_list' : leagues,
+    })
+    
+    return HttpResponse(template.render(context))
+
+def show_league_detail(request, league_id):
+    league = League.objects.get(id=league_id)
+    membership_history = LeagueMembership.objects.filter(league=league)
+    years = []
+    for item in membership_history:
+        years.append(item.year)
+    
+    template = loader.get_template('football/league_detail.html')
+    context = RequestContext(request, {
+        'league' : league,
+        'years' : years,
+    })
+    
+    return HttpResponse(template.render(context))
+
+def show_standings(request, league_id, year):
+    l = League.objects.get(id=league_id)
+    y = Year.objects.get(universe=l.universe, year=year)
+    members = LeagueMembership.objects.filter(universe=l.universe, year=y, league=l).order_by('conference')
+    standings = []
+    sorted_standings = []
+    for item in members:
+        try:
+            standings[item.conference]
+        except:
+            standings.append([])
+        try:
+            standings[item.conference][item.division]
+        except:
+            standings[item.conference].append([])
+        stats = TeamStats.objects.get(universe=item.universe, year=item.year, team=item.team)
+        standings[item.conference][item.division].append(stats)
+
+    for conference in standings:  
+        sorted_standings.append([])
+        ix = len(sorted_standings) - 1
+        for division in conference:
+            sorted_standings[ix].append(sorted(division, key=operator.attrgetter('pct'), reverse=True))
+
+    template = loader.get_template('football/standings.html')
+    context = RequestContext(request, {
+        'league_name' : l.name,
+        'year' : year,
+        'standings' : sorted_standings,
+    })
+    return HttpResponse(template.render(context))
+    
+   
     
 # Stats
 
+def get_team_stats(universe, year, team):
+    try:
+        ts = TeamStats.objects.get(universe=universe,
+                                   year=year,
+                                   team=team)
+    except:
+        ts = TeamStats(universe=universe,
+                       year=year,
+                       team=team)
+        ts.save()
+    return ts
+
 def update_stats(db_game, game):
-    stats = [[db_game.home_team, game.get_home_team().statbook.stats],
-             [db_game.away_team, game.get_away_team().statbook.stats]]
-    for db_team, game_stats in stats:
-        try:
-            ts = TeamStats.objects.get(universe=db_game.universe,
-                                       year=db_game.year,
-                                       team=db_team)
-        except:
-            ts = TeamStats(universe=db_game.universe,
-                           year=db_game.year,
-                           team=db_team)
-            ts.save()
+    home_db_stats = get_team_stats(db_game.universe, db_game.year, db_game.home_team)
+    away_db_stats = get_team_stats(db_game.universe, db_game.year, db_game.away_team)
+    home_game_stats = game.get_home_team().statbook.stats
+    away_game_stats = game.get_away_team().statbook.stats
+    stats = [[home_db_stats, home_game_stats],
+             [away_db_stats, away_game_stats]]
+             
+    if home_game_stats['score'] == away_game_stats['score']:
+        home_db_stats.ties += 1
+        away_db_stats.ties += 1
+    elif home_game_stats['score'] > away_game_stats['score']:
+        home_db_stats.wins += 1
+        away_db_stats.losses += 1
+    else:
+        home_db_stats.losses += 1
+        away_db_stats.wins += 1
+
+    for db_team_stats, game_stats in stats:
         for key, game_value in game_stats.iteritems():
-            db_value = getattr(ts,key)
+            db_value = getattr(db_team_stats,key)
             ## @TODO fix this to check type
             if key == 'completion_pct':
                 db_value = float(db_value)
@@ -480,6 +564,6 @@ def update_stats(db_game, game):
                 db_value = [x+y for x,y in zip(db_value,game_value)]
             else:
                 db_value += game_value
-            setattr(ts,key,db_value)
-        ts.save()
+            setattr(db_team_stats,key,db_value)
+        db_team_stats.save()
     
