@@ -5,7 +5,7 @@ class YearAdmin(admin.ModelAdmin):
     list_display = ('year', 'current_year', 'universe')
 
 class TeamAdmin(admin.ModelAdmin):
-    list_display = ('city', 'nickname', 'human_control', 'home_field_advantage', 'coach', 'universe')
+    list_display = ('city', 'nickname', 'human_control', 'home_field_advantage', 'coach', 'draft_position_order', 'universe')
 
 def make_free_agent(modeladmin, request, queryset):
     queryset.update(signed=False)

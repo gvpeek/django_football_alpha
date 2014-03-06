@@ -12,16 +12,16 @@ urlpatterns = patterns('',
 
     url(r'player/(?P<player_id>\d+)/$', views.player, name='player'),
     url(r'player/create/(?P<number>\d+)/$', views.create_players, name='create_players'),
-    url(r'player/age/(?P<years>\d+)/$', views.age_players, name='age_players'),
+    # url(r'player/age/(?P<years>\d+)/$', views.age_players, name='age_players'),
 
-    url(r'year/advance/$', views.advance_year, name='advance_year'),
+    url(r'year/advance/(?P<universe_id>\d+)/$', views.advance_year, name='advance_year'),
 
     url(r'city/initialize/$', views.initialize_cities, name='initialize_cities'),
     url(r'nickname/initialize/$', views.initialize_nicknames, name='initialize_nicknames'),
 
     url(r'team/create/(?P<level>\w+)/(?P<number>\d+)/$', views.create_teams, name='create_teams'),
     url(r'team/list/(?P<universe_id>\d+)/$', views.show_teams, name='show_teams'),
-    url(r'team/roster/(?P<universe_id>\d+)/(?P<team_id>\d+)/$', views.show_roster, name='show_roster'),
+    url(r'team/roster/(?P<team_id>\d+)/(?P<year>\d+)/$', views.show_roster, name='show_roster'),
     
     url(r'league/create/(?P<universe_id>\d+)/(?P<name>\w+)/(?P<level>\w+)/(?P<nbr_conf>\d+)/(?P<nbr_div>\d+)/(?P<nbr_teams>\d+)/(?P<nbr_playoff_teams>\d+)/$', views.create_league, name='create_league'),    
     url(r'league/standings/(?P<league_id>\d+)/(?P<year>\d+)/$', views.show_standings, name='show_standings'),

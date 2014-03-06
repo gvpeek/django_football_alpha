@@ -69,10 +69,11 @@ def initialize_nicknames(request):
 def create_universe(request, name):
     u = Universe(name=name)
     u.save()
-    create_year(u, 1945)
     for x in xrange(30):
-        advance_year(request, u)
+        age_players(u, 1)
+        create_players(request, u, 600)
     Player.objects.filter(universe=u, retired=True).delete()
+    create_year(u, 1945)
     create_teams(request, u, 'pro', 8)
     create_league(request, u.id, 'AFL', 'pro', 1, 2, 8, 2)
     
@@ -88,21 +89,58 @@ def create_year(universe, year):
     
     return y
 
-def advance_year(request,universe):
+def advance_year(request,universe_id):
+    universe = Universe.objects.get(id=universe_id)
     y = Year.objects.get(universe=universe,current_year=True)
     y.current_year = False
     y.save()
     new_year = create_year(universe, y.year+1)
-    age_players(request, universe, 1)
+    age_players(universe, 1)
     create_players(request, universe, 600)
-    # copy_rosters(universe, new_year)
+    copy_league_memberships(universe, y, new_year)
+    copy_rosters(universe, y, new_year)
+    draft_players(universe)
+
+    leagues = League.objects.filter(universe=universe)
+    print leagues
+    for l in leagues:
+        create_schedule(l)
+        play_season(l)
 
     return HttpResponse("Advanced one year.")
+    
+def copy_league_memberships(universe, source_year, new_year):
+    current_membership = LeagueMembership.objects.filter(universe=universe, year=source_year)
+    for membership in current_membership:
+        new_membership = LeagueMembership(universe=membership.universe,
+                                          year=new_year,
+                                          league=membership.league,
+                                          team=membership.team,
+                                          conference=membership.conference,
+                                          division=membership.division)
+        new_membership.save()
 
-# def copy_rosters(universe, year):
-#     current_rosters = Roster.objects.filter(universe=universe, year=year)
-#     for roster in current
-#     new_roster=
+def copy_rosters(universe, source_year, new_year):
+    current_rosters = Roster.objects.filter(universe=universe, year=source_year)
+    for roster in current_rosters:
+        roster.id = None
+        roster.pk = None
+        roster.year = new_year
+        print roster.team.id, roster.team.city, roster.team.nickname
+        for position in roster.get_positions():
+            player = getattr(roster,position)
+            if player.retired:
+                setattr(roster,position,None)
+        roster.save()
+        print roster.team.id, roster.team.city, roster.team.nickname
+        # new_roster=Roster(universe=universe,
+        #                   year=new_year,
+        #                   team=roster.team)
+        # for position in roster.get_positions():
+        #     player = getattr(roster,position)
+        #     if not player.retired:
+        #         setattr(new_roster,position,player)
+        # new_roster.save()
 
 # Game
 
@@ -159,11 +197,10 @@ def show_teams(request, universe_id):
     })
     return HttpResponse(template.render(context))
 
-def show_roster(request, universe_id, team_id):
-    u = Universe.objects.get(id=universe_id)
-    y = Year.objects.filter(universe=u, current_year=True)
-    t = Team.objects.get(universe=u, id=team_id)
-    r = Roster.objects.get(universe=u, team=t, year=y)
+def show_roster(request, team_id, year):
+    t = Team.objects.get(id=team_id)
+    y = Year.objects.get(universe=t.universe, year=year)
+    r = Roster.objects.get(universe=t.universe, team=t, year=y)
     roster = [r.qb, r.rb, r.wr, r.og, r.c, r.ot, r.de, r.dt, r.lb, r.cb, r.s, r.k, r.p]
     template = loader.get_template('football/roster.html')
     context = RequestContext(request, {
@@ -171,6 +208,16 @@ def show_roster(request, universe_id, team_id):
         'roster' : roster,
     })
     return HttpResponse(template.render(context)) 
+
+def determine_draft_needs(preference, roster):
+    filled=[]
+    for position in preference:
+        if getattr(roster, position.lower()):
+            filled.append(position)
+    for position in filled:
+        preference.remove(position)
+        
+    return preference
    
 def draft_players(universe):
     current_year = Year.objects.get(universe=universe,
@@ -179,31 +226,40 @@ def draft_players(universe):
     draft_preference = {}
     nbr_positions = 0 
     for team in teams:
-        r = Roster(universe=universe,
-                   year=current_year,
-                   team=team)
-        r.save()
+        try:
+            r = Roster.objects.get(universe=universe,
+                       year=current_year,
+                       team=team)
+        except:
+            r = Roster(universe=universe,
+                       year=current_year,
+                       team=team)
+            r.save()
         draft_preference[team] = deepcopy(json.loads(team.draft_position_order))
-        if not nbr_positions:
+        draft_preference[team] = determine_draft_needs(draft_preference[team], r)
+        if nbr_positions < len(draft_preference[team]):
             nbr_positions=len(draft_preference[team])
     draft_order=[]
     for i in xrange(nbr_positions):
         for team in teams:
-            draft_order.append((team, draft_preference[team][i]))
+            try:
+                draft_order.append((team, draft_preference[team][i]))
+            except:
+                pass
     for pick in draft_order:
         players = Player.objects.filter(universe=universe,
                                         position=pick[1],
                                         retired=False,
                                         signed=False,
                                         age__gte=23).order_by('ratings').reverse()
-        p = players[0]
-        r = Roster.objects.get(universe=universe,
-                               year=current_year,
-                               team=pick[0])
-        setattr(r,pick[1].lower(),p)
-        r.save()
-        p.signed=True
-        p.save()
+        player = players[0]
+        roster = Roster.objects.get(universe=universe,
+                                    year=current_year,
+                                    team=pick[0])
+        setattr(roster,pick[1].lower(),player)
+        roster.save()
+        player.signed=True
+        player.save()
 
     create_coaching_tendencies()
         
@@ -239,11 +295,12 @@ def create_players(request, universe, number):
 def _check_rating_range(player,range):
     if player.ratings < min(range):
         player.retired = True
+        player.signed = False
     elif player.ratings > max(range):
         player.ratings = max(range)
         
 @transaction.commit_manually         
-def age_players(request,universe, years):
+def age_players(universe, years):
     min_max_ratings = [(14,(20,50)), # (age, (min,max))
                         (18,(30,60)),
                         (22,(45,75)),

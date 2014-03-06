@@ -334,7 +334,9 @@ class Roster(models.Model):
                           blank=True,
                           limit_choices_to={'position' : 'K',
                                             'retired' : False})
-
+    
+    def get_positions(self):
+        return ['qb', 'rb', 'wr', 'og', 'c', 'ot', 'dt', 'de', 'lb', 'cb', 's', 'k', 'p']
 
        
 # League                                           

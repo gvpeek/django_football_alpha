@@ -16,13 +16,13 @@
 		<tbody>
 			{% for conference in standings %}
 				{% for division in conference %}
-					{% for team in division %}
+					{% for team_stat in division %}
 					<tr>
-						<td>{{ team.team }}</td>
-						<td>{{ team.wins }}</td>
-						<td>{{ team.losses }}</td>
-						<td>{{ team.ties }}</td>
-						<td>{{ team.pct }}</td>
+						<td><a href="/football/team/roster/{{ team_stat.team.id }}/{{ team_stat.year }}">{{ team_stat.team }}</a></td>
+						<td>{{ team_stat.wins }}</td>
+						<td>{{ team_stat.losses }}</td>
+						<td>{{ team_stat.ties }}</td>
+						<td>{{ team_stat.pct }}</td>
 					</tr>
 					{% endfor %}
 				{% endfor %}
