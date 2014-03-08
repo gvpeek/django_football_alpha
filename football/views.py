@@ -21,7 +21,7 @@ from playbook import Playbook as PlaybookInit # workaround, remove this when fix
 from stats import StatBook # workaround, remove this when fixed
 
 # import models
-from models import Universe, Player, Year, City, Nickname, Team, Roster, League, LeagueMembership, get_draft_position_order, Game, Schedule, Coach, Playbook, TeamStats
+from models import Universe, Player, Year, City, Nickname, Team, Roster, League, LeagueMembership, get_draft_position_order, Game, Schedule, Coach, Playbook, TeamStats, GameStats
 
 import names
 
@@ -423,7 +423,7 @@ def create_schedule(league):
                                                year=y,
                                                home_team=anchor_team, 
                                                away_team=rotation2[-1],
-                                               use_overtime = False,
+                                               use_overtime = True,
                                                league_game = False,
                                                division_game = False,
                                                conference_game = False,
@@ -432,7 +432,7 @@ def create_schedule(league):
                                                          year=y,
                                                          home_team=rotation2[-1], 
                                                          away_team=anchor_team,
-                                                         use_overtime = False,
+                                                         use_overtime = True,
                                                          league_game = False,
                                                          division_game = False,
                                                          conference_game = False,
@@ -481,7 +481,7 @@ def play_season(league):
         g = Game.objects.get(id=item.game.id)
         add_fields_to_team(g.home_team, g)
         add_fields_to_team(g.away_team, g)
-        game = GameDay(g.home_team, g.away_team)
+        game = GameDay(g.home_team, g.away_team, use_overtime=g.use_overtime)
         game.start_game()
         print game.get_away_team().team.city, game.get_away_team().statbook.stats['score_by_period'], game.get_away_team().statbook.stats['score']
         print game.get_home_team().team.city, game.get_home_team().statbook.stats['score_by_period'], game.get_home_team().statbook.stats['score']
@@ -516,11 +516,12 @@ def add_fields_to_team(team, game):
     team.stats = StatBook()
 
 def show_leagues(request, universe_id):
-    u = Universe.objects.get(id=universe_id)
-    leagues = League.objects.filter(universe=u)
+    universe = Universe.objects.get(id=universe_id)
+    leagues = League.objects.filter(universe=universe)
     
     template = loader.get_template('football/league_list.html')
     context = RequestContext(request, {
+        'universe' : universe.name,
         'league_list' : leagues,
     })
     
@@ -565,17 +566,55 @@ def show_standings(request, league_id, year):
         for division in conference:
             sorted_standings[ix].append(sorted(division, key=operator.attrgetter('pct'), reverse=True))
 
+    schedule_results=[]
+    try:
+        games = Game.objects.filter(universe=l.universe, year=y)
+        for game in games:
+            home_stats = GameStats.objects.get(universe=game.universe,
+                                               year=game.year,
+                                               game=game,
+                                               team=game.home_team)
+            away_stats = GameStats.objects.get(universe=game.universe,
+                                               year=game.year,
+                                               game=game,
+                                               team=game.away_team)
+            away=[]
+            away.extend([away_stats.team])
+            away.extend(literal_eval(away_stats.score_by_period))
+            away.extend([away_stats.score])
+            home=[]
+            home.extend([home_stats.team])
+            home.extend(literal_eval(home_stats.score_by_period))
+            home.extend([home_stats.score])
+            schedule_results.append([away,home])
+    except:
+        pass
+
     template = loader.get_template('football/standings.html')
     context = RequestContext(request, {
         'league_name' : l.name,
         'year' : year,
         'standings' : sorted_standings,
+        'schedule' : schedule_results,
     })
     return HttpResponse(template.render(context))
     
    
     
 # Stats
+def get_game_stats(universe, year, game, team):
+    try:
+        gs = GameStats.objects.get(universe=universe,
+                                   year=year,
+                                   game=game,
+                                   team=team)
+    except:
+        gs = GameStats(universe=universe,
+                       year=year,
+                       game=game,
+                       team=team)
+        gs.save()
+    return gs
 
 def get_team_stats(universe, year, team):
     try:
@@ -590,37 +629,47 @@ def get_team_stats(universe, year, team):
     return ts
 
 def update_stats(db_game, game):
-    home_db_stats = get_team_stats(db_game.universe, db_game.year, db_game.home_team)
-    away_db_stats = get_team_stats(db_game.universe, db_game.year, db_game.away_team)
+    home_db_game_stats = get_game_stats(db_game.universe, db_game.year, db_game, db_game.home_team)
+    away_db_game_stats = get_game_stats(db_game.universe, db_game.year, db_game, db_game.away_team)
+    home_db_team_stats = get_team_stats(db_game.universe, db_game.year, db_game.home_team)
+    away_db_team_stats = get_team_stats(db_game.universe, db_game.year, db_game.away_team)
     home_game_stats = game.get_home_team().statbook.stats
     away_game_stats = game.get_away_team().statbook.stats
-    stats = [[home_db_stats, home_game_stats],
-             [away_db_stats, away_game_stats]]
+    stats = [[home_db_game_stats, home_db_team_stats, home_game_stats],
+             [away_db_game_stats, away_db_team_stats, away_game_stats]]
              
     if home_game_stats['score'] == away_game_stats['score']:
-        home_db_stats.ties += 1
-        away_db_stats.ties += 1
+        home_db_team_stats.ties += 1
+        away_db_team_stats.ties += 1
+        home_db_game_stats.outcome = 'T'
+        away_db_game_stats.outcome = 'T'
     elif home_game_stats['score'] > away_game_stats['score']:
-        home_db_stats.wins += 1
-        away_db_stats.losses += 1
+        home_db_team_stats.wins += 1
+        away_db_team_stats.losses += 1
+        home_db_game_stats.outcome = 'W'
+        away_db_game_stats.outcome = 'L'
     else:
-        home_db_stats.losses += 1
-        away_db_stats.wins += 1
+        home_db_team_stats.losses += 1
+        away_db_team_stats.wins += 1
+        home_db_game_stats.outcome = 'L'
+        away_db_game_stats.outcome = 'W'
 
-    for db_team_stats, game_stats in stats:
+    for db_game_stats, db_team_stats, game_stats in stats:
         for key, game_value in game_stats.iteritems():
-            db_value = getattr(db_team_stats,key)
+            db_team_value = getattr(db_team_stats,key)
             ## @TODO fix this to check type
             if key == 'completion_pct':
-                db_value = float(db_value)
+                db_team_value = float(db_team_value)
             ## @TODO fix this to check type
             if key == 'score_by_period':
-                db_value = literal_eval(db_value)
-                while len(db_value) < len(game_value):
-                    db_value.append(0)
-                db_value = [x+y for x,y in zip(db_value,game_value)]
+                db_team_value = literal_eval(db_team_value)
+                while len(db_team_value) < len(game_value):
+                    db_team_value.append(0)
+                db_team_value = [x+y for x,y in zip(db_team_value,game_value)]
             else:
-                db_value += game_value
-            setattr(db_team_stats,key,db_value)
+                db_team_value += game_value
+            setattr(db_game_stats,key,game_value)
+            setattr(db_team_stats,key,db_team_value)
+        db_game_stats.save()
         db_team_stats.save()
     

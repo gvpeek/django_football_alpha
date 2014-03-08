@@ -29,6 +29,20 @@
 			{% endfor %}
 		</tbody>
 	</table>
+
+	{% for game in schedule %}
+	<table>
+		{% for team in game %}
+		<tr>
+			{% for stat in team %}
+				<td>{{ stat }}</td>
+			{% endfor %}
+		</tr>
+		{% endfor %}	
+	</table>
+		
+	{% endfor %}
+	
 {% else %}
 	<p>No standings for this league.</p>
 {% endif %}
