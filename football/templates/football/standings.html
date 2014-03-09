@@ -1,50 +1,58 @@
-{% if league_name and year %}
-	<h1>{{ league_name }} - {{ year }}</h1>
-{% endif %}
+{% extends "football/base.html" %}
+{% block content %}
 
-{% if standings %}
-	<table>
-		<thead>
-			<tr>
-				<th></th>
-				<th>W</th>
-				<th>L</th>
-				<th>T</th>
-				<th>Pct.</th>
-			</tr>
-		</thead>
-		<tbody>
-			{% for conference in standings %}
-				{% for division in conference %}
-					{% for team_stat in division %}
+	{% if league_name and year %}
+		<h1>{{ league_name }} - {{ year }}</h1>
+	{% endif %}
+
+	{% if standings %}
+		<div id="standings_display">
+			<table>
+				<thead>
 					<tr>
-						<td><a href="/football/team/roster/{{ team_stat.team.id }}/{{ team_stat.year }}">{{ team_stat.team }}</a></td>
-						<td>{{ team_stat.wins }}</td>
-						<td>{{ team_stat.losses }}</td>
-						<td>{{ team_stat.ties }}</td>
-						<td>{{ team_stat.pct }}</td>
+						<th></th>
+						<th>W</th>
+						<th>L</th>
+						<th>T</th>
+						<th>Pct.</th>
 					</tr>
+				</thead>
+				<tbody>
+					{% for conference in standings %}
+						{% for division in conference %}
+							{% for team_stat in division %}
+							<tr>
+								<td><a href="/football/team/roster/{{ team_stat.team.id }}/{{ team_stat.year }}">{{ team_stat.team }}</a></td>
+								<td>{{ team_stat.wins }}</td>
+								<td>{{ team_stat.losses }}</td>
+								<td>{{ team_stat.ties }}</td>
+								<td>{{ team_stat.pct }}</td>
+							</tr>
+							{% endfor %}
+						{% endfor %}
 					{% endfor %}
-				{% endfor %}
-			{% endfor %}
-		</tbody>
-	</table>
-
-	{% for game in schedule %}
-	<table>
-		{% for team in game %}
-		<tr>
-			{% for stat in team %}
-				<td>{{ stat }}</td>
-			{% endfor %}
-		</tr>
-		{% endfor %}	
-	</table>
-		
-	{% endfor %}
+				</tbody>
+			</table>
+		</div>
 	
-{% else %}
-	<p>No standings for this league.</p>
-{% endif %}
+		<div id="schedule_display">
+			{% for game in schedule %}
+			<table>
+				{% for team in game %}
+				<tr>
+					{% for stat in team %}
+						<td>{{ stat }}</td>
+					{% endfor %}
+				</tr>
+				{% endfor %}	
+			</table>
+			{% endfor %}
+		</div>
+	
+	{% else %}
+		<p>No standings for this league.</p>
+	{% endif %}
+
+{% endblock %}
 				
 					

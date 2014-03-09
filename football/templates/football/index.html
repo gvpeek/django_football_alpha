@@ -1,11 +1,16 @@
-<h1>Universes</h1>
+{% extends "football/base.html" %}
+{% block content %}
 
-{% if universe_list %}
-    <ul>
-    {% for universe in universe_list %}
-        <li><a href="/football/league/list/{{ universe.id }}/">{{ universe.name }}</a></li>
-    {% endfor %}
-    </ul>
-{% else %}
-    <p>No universes created.</p>
-{% endif %}
+	<h1>Universes</h1>
+
+	{% if universe_list %}
+	    <ul>
+	    {% for universe in universe_list %}
+	        <li><a href="/football/league/list/{{ universe.id }}/">{{ universe.name }}</a></li>
+	    {% endfor %}
+	    </ul>
+	{% else %}
+	    <p>No universes created.</p>
+	{% endif %}
+
+{% endblock %}

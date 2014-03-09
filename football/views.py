@@ -481,7 +481,9 @@ def play_season(league):
         g = Game.objects.get(id=item.game.id)
         add_fields_to_team(g.home_team, g)
         add_fields_to_team(g.away_team, g)
-        game = GameDay(g.home_team, g.away_team, use_overtime=g.use_overtime)
+        game = GameDay(home_team=g.home_team, 
+                       away_team=g.away_team, 
+                       use_overtime=g.use_overtime)
         game.start_game()
         print game.get_away_team().team.city, game.get_away_team().statbook.stats['score_by_period'], game.get_away_team().statbook.stats['score']
         print game.get_home_team().team.city, game.get_home_team().statbook.stats['score_by_period'], game.get_home_team().statbook.stats['score']

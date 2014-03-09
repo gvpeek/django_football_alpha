@@ -1,10 +1,15 @@
-{% if league %}
-	<h1>{{ league.name }}</h1>
-	{% if years %}
-	<ul>
-		{% for year in years %}
-			{% ifchanged year %}<li>{{ year }} - <a href="league/standings/{{ league.id }}/{{ year }}/">Standings</a></li>{% endifchanged %}
-		{% endfor %}
-	</ul>
-	{% endif %}	
-{% endif %}
+{% extends "football/base.html" %}
+{% block content %}
+
+	{% if league %}
+		<h1>{{ league.name }}</h1>
+		{% if years %}
+		<ul>
+			{% for year in years %}
+				{% ifchanged year %}<li>{{ year }} - <a href="league/standings/{{ league.id }}/{{ year }}/">Standings</a></li>{% endifchanged %}
+			{% endfor %}
+		</ul>
+		{% endif %}	
+	{% endif %}
+	
+{% endblock %}

@@ -1,9 +1,14 @@
-{% if team_list %}
-	<ul>
-	{% for team in team_list %}
-		<li><a href="/football/team/roster/{{ universe.id }}/{{ team.id }}/">{{ team.city }} {{ team.nickname }}</a></li>
-	{% endfor %}
-	</ul>
-{% else %}
-	<p> No teams to display. </p>
-{% endif %}
+{% extends "football/base.html" %}
+{% block content %}
+
+	{% if team_list %}
+		<ul>
+		{% for team in team_list %}
+			<li><a href="/football/team/roster/{{ universe.id }}/{{ team.id }}/">{{ team.city }} {{ team.nickname }}</a></li>
+		{% endfor %}
+		</ul>
+	{% else %}
+		<p> No teams to display. </p>
+	{% endif %}
+	
+{% endblock %}
