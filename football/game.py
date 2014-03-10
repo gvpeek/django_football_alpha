@@ -464,6 +464,7 @@ class Scoreboard():
         self.scoreboard['clock'] = str(self.get_clock().get_time_remaining())[2:7]
         self.scoreboard['possession'] = self.determine_possession()
         self.scoreboard['description'] = play.description
+        print play.description
         # at end of game, state is None, so wrapping in try
         try:
             self.scoreboard['down'], self.scoreboard['yards_to_go'] = self.get_state().get_down_distance(string_format=True)

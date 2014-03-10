@@ -1,4 +1,5 @@
 import json
+import sys
 
 from math import ceil
 from random import shuffle, random, choice
@@ -45,7 +46,7 @@ class Player(models.Model):
         ('OG', 'Offensive Guard'),
         ('C', 'Center'),
         ('DT', 'Defensive Tackle'),
-        ('DE', 'Defnesive End'),
+        ('DE', 'Defensive End'),
         ('LB', 'Linebacker'),
         ('CB', 'Corner Back'),
         ('S', 'Safety'),
@@ -132,7 +133,7 @@ class Coach(models.Model):
         if total_time_remaining > 0:
             time_score_ratio=(score_difference()/(total_time_remaining/30.0))
         urgency_threshold=-.4
-
+            
         if state().is_drive():
             down, dist = down_distance()
             if down in [1,2,3] or (down==4 and urgency_threshold > time_score_ratio):
@@ -145,7 +146,8 @@ class Coach(models.Model):
                 play_choice=self.choose_rush_pass_play(available_plays, target_yards)
             elif down == 4:
                 try:
-                    if self.fg_dist_probabilities.get(distance_to_endzone()) >= 40:
+                    distance=unicode(int(distance_to_endzone()))
+                    if self.fg_dist_probabilities.get(distance) >= 40:
                         play_choice=available_plays['FG']
                 except:
                     pass
@@ -163,30 +165,29 @@ class Coach(models.Model):
                 play_choice=available_plays['K']
         elif state().is_free_kick():
             play_choice=available_plays['K']
-                    
+        
         if not play_choice:
             play_choice = choice(available_plays.values())
-            
-#        try:
-#            print play_choice.name, score_difference(), period(True), time_remaining().total_seconds(), time_score_ratio, down_distance(), distance_to_endzone()
-#        except:
-#            pass
-        
+
         return play_choice
     
     def choose_rush_pass_play(self,
                               available_plays,
                               target_yards):
+        target=unicode(int(target_yards))
         play_choice=None
         choices=[]
         success_rates = []
         for play in self.play_probabilities:
-            if play in available_plays:
+            int_play = int(play)
+
+            if int_play in available_plays:
                 try:
-                    success_rates.append(self.play_probabilities[play].get(target_yards))
-                    choices.append(available_plays[play])
+                    success_rates.append(self.play_probabilities[play].get(target))
+                    choices.append(available_plays[int_play])
                 except:
-                    pass
+                    print 'play call error', sys.exc_info()[0]
+
         if len(success_rates) and sum(success_rates):
             avg=sum(success_rates)/float(len(success_rates))
             try:
@@ -197,9 +198,10 @@ class Coach(models.Model):
             r = random()
             running_total=0
             for step in prob:
-#                print running_total, r
+                # print running_total, r
                 if running_total < r < (running_total + step):
                     play_choice = choices[prob.index(step)]
+                    print 'play_selected', play_choice
                     break
                 running_total += step
                 

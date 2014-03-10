@@ -26,7 +26,7 @@
 								<td>{{ team_stat.wins }}</td>
 								<td>{{ team_stat.losses }}</td>
 								<td>{{ team_stat.ties }}</td>
-								<td>{{ team_stat.pct }}</td>
+								<td>{{ team_stat.pct|floatformat:3 }}</td>
 							</tr>
 							{% endfor %}
 						{% endfor %}

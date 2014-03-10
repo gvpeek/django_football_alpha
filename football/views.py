@@ -102,7 +102,7 @@ def advance_year(request,universe_id):
     draft_players(universe)
 
     leagues = League.objects.filter(universe=universe)
-    print leagues
+
     for l in leagues:
         create_schedule(l)
         play_season(l)
@@ -126,7 +126,7 @@ def copy_rosters(universe, source_year, new_year):
         roster.id = None
         roster.pk = None
         roster.year = new_year
-        print roster.team.id, roster.team.city, roster.team.nickname
+
         for position in roster.get_positions():
             player = getattr(roster,position)
             if player.retired:
