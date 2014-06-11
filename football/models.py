@@ -75,8 +75,8 @@ class Coach(models.Model):
     first_name = models.CharField(max_length=60)
     last_name = models.CharField(max_length=60)
     skill = models.IntegerField()
-    play_probabilities = models.CharField(max_length=2000)
-    fg_dist_probabilities = models.CharField(max_length=1000)
+    play_probabilities = models.CharField(max_length=10000)
+    fg_dist_probabilities = models.CharField(max_length=10000)
 
     def practice_plays(self,coach,playbook,skills):
 #        results = namedtuple('PracticeResults',['id','runs','success','total_yardage','success_yardage','turnover'])
@@ -107,6 +107,8 @@ class Coach(models.Model):
                         kicks.append(yds)
                     max_dist = max(kicks)
                     fg_outcomes={k: (len([i for i in kicks if i >= k])/float(len(kicks)))*100 for k in range(1,61)}
+        print play_outcomes
+        print fg_outcomes
         coach.play_probabilities=json.dumps(play_outcomes)
         coach.fg_dist_probabilities=json.dumps(fg_outcomes)
                         

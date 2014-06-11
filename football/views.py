@@ -69,11 +69,22 @@ def initialize_nicknames(request):
 def create_universe(request, name):
     u = Universe(name=name)
     u.save()
-    for x in xrange(30):
-        age_players(u, 1)
-        create_players(request, u, 600)
-    Player.objects.filter(universe=u, retired=True).delete()
+    seed_universe_players(u,700)
     create_year(u, 1945)
+    # TODO move this to an initialize method
+    # TODO investigate better way of testing presence of data
+    try:
+      Playbook.objects.get(id=1)
+    except:
+      create_playbook(request)
+    try:
+      City.objects.get(id=1)
+    except:
+      initialize_cities(request)
+    try:
+      Nickname.objects.get(id=1)
+    except:
+      initialize_nicknames(request)
     create_teams(request, u, 'pro', 8)
     create_league(request, u.id, 'AFL', 'pro', 1, 2, 8, 2)
     
@@ -274,6 +285,79 @@ def player(request, player_id):
     player = Player.objects.get(id=player_id)
     
     return HttpResponse("You're looking at player %s - %s %s." % (player_id, player.first_name, player.last_name))
+
+def seed_universe_players(universe, players_per_year):
+    def create_player_stub(number):
+        players = ['11' + str(randint(25,40)) +
+                          str(int((floor(((32 * 100) * pow(randint(5,100),-.5)) / 100) + 18))) +
+                          str(randint(1,4)) +
+                          str(randint(3,5)) +
+                          'A' +
+                          choice(['QB','RB','WR','OT','OG','C','DT','DE','LB','CB','S','K','P'])
+                   for x in xrange(int(number))]
+
+        return players
+
+    def _check_rating_range_stub(rating, rating_range, status):
+        if rating < min(rating_range):
+            status = 'R'
+        elif rating > max(rating_range):
+            rating = max(rating_range)
+        return rating, status
+
+    def age_player_stub(player_data, years=1):
+        min_max_ratings = [(14,(20,50)), # (age, (min,max))
+                            (18,(30,60)),
+                            (22,(45,75)),
+                            (99,(60,90))]
+        age, rating, apex, inc, dec, status, position = (int(player_data[:2]), 
+                                                        int(player_data[2:4]), 
+                                                        int(player_data[4:6]),
+                                                        int(player_data[6]),
+                                                        int(player_data[7]),
+                                                        player_data[8],
+                                                        player_data[9:])
+        for y in xrange(int(years)):        
+            age += 1
+            if age <= apex:
+                rating += randint(1,inc)
+            else:
+                rating -= randint(3,dec)
+            for range_max,ratings in min_max_ratings:
+                if age <= range_max:
+                    rating, status = _check_rating_range_stub(rating, ratings, status)
+                    break
+        return str(age)+str(rating)+str(apex)+str(inc)+str(dec)+status+position
+
+    pl=[]
+    for x in xrange(50):
+        pl = [age_player_stub(player) for player in pl]        
+        pl = [player for player in pl if player[8] != 'R']
+
+        pl.extend(create_player_stub(players_per_year))
+
+    players=[]
+    for p in pl:
+        age, rating, apex, inc, dec, status, position = (int(p[:2]), 
+                                                      int(p[2:4]), 
+                                                      int(p[4:6]),
+                                                      int(p[6]),
+                                                      int(p[7]),
+                                                      p[8],
+                                                      p[9:])
+        players.extend([Player(universe=universe,
+                    first_name=names.first_name(),
+                    last_name=names.last_name(),
+                    age = age,
+                    position = position,
+                    constitution = randint(25,40),
+                    retired = False,
+                    apex_age = apex,
+                    growth_rate = inc,
+                    declination_rate = dec,
+                    ratings = rating)])
+
+    Player.objects.bulk_create(players)  
 
 def create_players(request, universe, number):
     players = [Player(universe=universe,
