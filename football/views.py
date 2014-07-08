@@ -143,7 +143,7 @@ def copy_rosters(universe, source_year, new_year):
                         if player.retired:
                                 setattr(roster,position,None)
                 roster.save()
-                print roster.team.id, roster.team.city, roster.team.nickname
+                # print roster.team.id, roster.team.city, roster.team.nickname
                 # new_roster=Roster(universe=universe,
                 #                   year=new_year,
                 #                   team=roster.team)
@@ -233,24 +233,41 @@ def determine_draft_needs(preference, roster):
      
 def draft_players(universe):
         current_year = Year.objects.get(universe=universe,
-                                                                             current_year=True)
-        teams = Team.objects.filter(universe=universe)
+                                        current_year=True)
+        try:
+            previous_year = Year.objects.get(universe=universe,
+                                             year=(current_year.year - 1))
+        except Exception, e:
+            print e
+
+        teams=[]
+        try:
+            team_order=TeamStats.objects.filter(universe=universe,
+                                              year=previous_year).order_by('pct')
+            for team_stat in team_order:
+                teams.append(list(Team.objects.get(id=team_stat.team.id))[0])
+        except Exception, e:
+            print e
+
+        if not teams:
+            teams = Team.objects.filter(universe=universe)
+            shuffle(list(teams))
         draft_preference = {}
         nbr_positions = 0 
         for team in teams:
-                try:
-                        r = Roster.objects.get(universe=universe,
-                                             year=current_year,
-                                             team=team)
-                except:
-                        r = Roster(universe=universe,
-                                             year=current_year,
-                                             team=team)
-                        r.save()
-                draft_preference[team] = deepcopy(json.loads(team.draft_position_order))
-                draft_preference[team] = determine_draft_needs(draft_preference[team], r)
-                if nbr_positions < len(draft_preference[team]):
-                        nbr_positions=len(draft_preference[team])
+            try:
+                r = Roster.objects.get(universe=universe,
+                                     year=current_year,
+                                     team=team)
+            except:
+                r = Roster(universe=universe,
+                                     year=current_year,
+                                     team=team)
+                r.save()
+            draft_preference[team] = deepcopy(json.loads(team.draft_position_order))
+            draft_preference[team] = determine_draft_needs(draft_preference[team], r)
+            if nbr_positions < len(draft_preference[team]):
+                    nbr_positions=len(draft_preference[team])
         draft_order=[]
         for i in xrange(nbr_positions):
             for team in teams:
@@ -269,7 +286,6 @@ def draft_players(universe):
                                         team=pick_team)
             player = players[0]
             current_player = getattr(roster, pick_position.lower())
-            print player.ratings, current_player.ratings
             if not current_player or \
                     (player.ratings >  current_player.ratings): # and player.age < current_player.age 
                 # current_player = Player.objects.get(id=roster.pick_position.lower().id)
@@ -578,15 +594,12 @@ def play_season(league):
                                              away_team=g.away_team, 
                                              use_overtime=g.use_overtime)
                 game.start_game()
-                print game.get_away_team().team.city, game.get_away_team().statbook.stats['score_by_period'], game.get_away_team().statbook.stats['score']
-                print game.get_home_team().team.city, game.get_home_team().statbook.stats['score_by_period'], game.get_home_team().statbook.stats['score']
-                print
                 update_stats(g, game)
                 
 def add_fields_to_team(team, game):
         roster = Roster.objects.get(universe=game.universe,
-                                                                         year=game.year,
-                                                                         team=team)
+                                    year=game.year,
+                                    team=team)
         team.skills = {'qb': roster.qb.ratings,
                                      'rb': roster.rb.ratings,
                                      'wr': roster.wr.ratings,
@@ -640,7 +653,7 @@ def show_league_detail(request, league_id):
 def show_standings(request, league_id, year):
         l = League.objects.get(id=league_id)
         y = Year.objects.get(universe=l.universe, year=year)
-        members = LeagueMembership.objects.filter(universe=l.universe, year=y, league=l).order_by('conference')
+        members = LeagueMembership.objects.filter(universe=l.universe, year=y, league=l).order_by('conference', 'division')
         standings = []
         sorted_standings = []
         for item in members:
@@ -661,14 +674,15 @@ def show_standings(request, league_id, year):
                 for division in conference:
                         sorted_standings[ix].append(sorted(division, key=operator.attrgetter('pct'), reverse=True))
 
+
         schedule_results=[]
         try:
                 games = Game.objects.filter(universe=l.universe, year=y)
                 for game in games:
                         home_stats = GameStats.objects.get(universe=game.universe,
-                                                                                             year=game.year,
-                                                                                             game=game,
-                                                                                             team=game.home_team)
+                                                             year=game.year,
+                                                             game=game,
+                                                             team=game.home_team)
                         away_stats = GameStats.objects.get(universe=game.universe,
                                                                                              year=game.year,
                                                                                              game=game,
@@ -765,6 +779,7 @@ def update_stats(db_game, game):
                                 db_team_value += game_value
                         setattr(db_game_stats,key,game_value)
                         setattr(db_team_stats,key,db_team_value)
+                db_team_stats.pct = (db_team_stats.wins + (db_team_stats.ties / 2.0)) / (float(db_team_stats.wins + db_team_stats.losses + db_team_stats.ties))
+                db_team_stats.completion_pct = (db_team_stats.pass_comp / float(db_team_stats.pass_att))
                 db_game_stats.save()
                 db_team_stats.save()
-        

@@ -126,7 +126,7 @@ class Coach():
             try:
                 prob=[((item / avg) /float(len(success_rates))) for item in success_rates]
             except:
-                print item, avg, float(len(success_rates)), play, target_yards
+                print 'Exception', item, avg, float(len(success_rates)), play, target_yards
             
             r = random()
             running_total=0

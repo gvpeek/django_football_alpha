@@ -23,7 +23,8 @@ class NicknameAdmin(admin.ModelAdmin):
     list_display = ('name', 'pro', 'semipro',)
     
 class RosterAdmin(admin.ModelAdmin):
-    list_display = ('year', 'team', 'qb', 'rb', 'wr', 'og', 'c', 'ot', 'dt', 'de', 'lb', 'cb', 's', 'k', 'p', 'universe')
+    list_display = ('year', 'team', 'qb', 'rb', 'wr', 'og', 'c', 'ot', 'dt', 
+                    'de', 'lb', 'cb', 's', 'k', 'p', 'universe')
 
 class LeagueAdmin(admin.ModelAdmin):
     list_display = ('name', 'level', 'universe')
@@ -38,16 +39,24 @@ class ScheduleAdmin(admin.ModelAdmin):
     list_display = ('week', 'game_number', 'game', 'year', 'league')  
     
 class CoachAdmin(admin.ModelAdmin):
-    list_display = ('first_name', 'last_name', 'skill', 'play_probabilities', 'fg_dist_probabilities') 
+    list_display = ('first_name', 'last_name', 'skill', 'play_probabilities', 
+                    'fg_dist_probabilities') 
 
 class PlaybookAdmin(admin.ModelAdmin):
     list_display = ('name', 'plays')
 
 class TeamStatsAdmin(admin.ModelAdmin):
-    list_display = ('team', 'year', 'wins', 'losses', 'ties', 'pct', 'score', 'score_by_period', 'total_yards', 'pass_att',  'pass_comp', 'completion_pct', 'pass_yards', 'pass_td',  'intercepted', 'sacked', 'rush_att', 'rush_yards', 'rush_td', 'universe')
+    list_display = ('team', 'year', 'wins', 'losses', 'ties', 'pct', 'score', 
+                    'score_by_period', 'total_yards', 'pass_att',  
+                    'pass_comp', 'completion_pct', 'pass_yards', 'pass_td',  
+                    'intercepted', 'sacked', 'rush_att', 'rush_yards', 
+                    'rush_td', 'fumbles', 'universe')
 
 class GameStatsAdmin(admin.ModelAdmin):
-    list_display = ('team', 'game', 'year', 'outcome', 'score', 'score_by_period', 'total_yards', 'pass_att',  'pass_comp', 'completion_pct', 'pass_yards', 'pass_td',  'intercepted', 'sacked', 'rush_att', 'rush_yards', 'rush_td', 'universe')
+    list_display = ('team', 'game', 'year', 'outcome', 'score', 'score_by_period', 
+                    'total_yards', 'pass_att',  'pass_comp', 'completion_pct', 
+                    'pass_yards', 'pass_td',  'intercepted', 'sacked', 'rush_att', 
+                    'rush_yards', 'rush_td', 'fumbles', 'universe')
 
 
 admin.site.register(Universe)

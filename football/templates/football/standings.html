@@ -1,8 +1,7 @@
 {% extends "football/base.html" %}
-{% load staticfiles %}
-<style type="text/css" src="{% static "football/football.css" %}"></style>
+
 {% block content %}
-	<h1>{% static "football/football.css" %}</h1>
+
 	{% if league_name and year %}
 		<h1>{{ league_name }} - {{ year }}</h1>
 	{% endif %}

@@ -107,8 +107,8 @@ class Coach(models.Model):
                         kicks.append(yds)
                     max_dist = max(kicks)
                     fg_outcomes={k: (len([i for i in kicks if i >= k])/float(len(kicks)))*100 for k in range(1,61)}
-        print play_outcomes
-        print fg_outcomes
+        # print play_outcomes
+        # print fg_outcomes
         coach.play_probabilities=json.dumps(play_outcomes)
         coach.fg_dist_probabilities=json.dumps(fg_outcomes)
                         
@@ -203,7 +203,7 @@ class Coach(models.Model):
                 # print running_total, r
                 if running_total < r < (running_total + step):
                     play_choice = choices[prob.index(step)]
-                    print 'play_selected', play_choice
+                    # print 'play_selected', play_choice
                     break
                 running_total += step
                 
@@ -409,6 +409,7 @@ class TeamStats(models.Model):
     wins = models.IntegerField(default=0)
     losses = models.IntegerField(default=0)
     ties = models.IntegerField(default=0)
+    pct = models.DecimalField(max_digits=4, decimal_places=3, default=0.00)
     score = models.IntegerField(default=0)
     score_by_period = models.CommaSeparatedIntegerField(max_length=30, default=[0,0,0,0])
     total_yards = models.IntegerField(default=0)
@@ -442,10 +443,10 @@ class TeamStats(models.Model):
     kick_return_yards = models.IntegerField(default=0)
     safeties = models.IntegerField(default=0)
     
-    def _get_pct(self):
-        # calculates winning percentage
-        return (self.wins + (self.ties / 2.0)) / (float(self.wins + self.losses + self.ties))
-    pct = property(_get_pct)
+    # def _get_pct(self):
+    #     # calculates winning percentage
+    #     return (self.wins + (self.ties / 2.0)) / (float(self.wins + self.losses + self.ties))
+    # pct = property(_get_pct)
 
     # 
     # class Meta:
