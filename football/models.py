@@ -266,78 +266,104 @@ class Roster(models.Model):
                            blank=True,
                            limit_choices_to={'position' : 'QB',
                                              'retired' : False})
+    qb_age = models.IntegerField(null=True, blank=True)
+    qb_rating = models.IntegerField(null=True, blank=True)
     rb = models.ForeignKey(Player, 
                            related_name='running back', 
                            null=True,
                            blank=True,
                            limit_choices_to={'position' : 'RB',
                                              'retired' : False})
+    rb_age = models.IntegerField(null=True, blank=True)
+    rb_rating = models.IntegerField(null=True, blank=True)
     wr = models.ForeignKey(Player, 
                            related_name='wide receiver', 
                            null=True,
                            blank=True,
                            limit_choices_to={'position' : 'WR',
                                              'retired' : False})
+    wr_age = models.IntegerField(null=True, blank=True)
+    wr_rating = models.IntegerField(null=True, blank=True)
     og = models.ForeignKey(Player, 
                            related_name='offensive guard', 
                            null=True,
                            blank=True,
                            limit_choices_to={'position' : 'OG',
                                              'retired' : False})
+    og_age = models.IntegerField(null=True, blank=True)
+    og_rating = models.IntegerField(null=True, blank=True)
     ot = models.ForeignKey(Player, 
                            related_name='offensive tackle', 
                            null=True,
                            blank=True,
                            limit_choices_to={'position' : 'OT',
                                              'retired' : False})
+    ot_age = models.IntegerField(null=True, blank=True)
+    ot_rating = models.IntegerField(null=True, blank=True)
     c = models.ForeignKey(Player, 
                            related_name='center', 
                            null=True,
                            blank=True,
                            limit_choices_to={'position' : 'C',
                                              'retired' : False})
+    c_age = models.IntegerField(null=True, blank=True)
+    c_rating = models.IntegerField(null=True, blank=True)
     de = models.ForeignKey(Player, 
                            related_name='defensive end', 
                            null=True,
                            blank=True,
                            limit_choices_to={'position' : 'DE',
                                              'retired' : False})
+    de_age = models.IntegerField(null=True, blank=True)
+    de_rating = models.IntegerField(null=True, blank=True)
     dt = models.ForeignKey(Player, 
                            related_name='defensive tackle', 
                            null=True,
                            blank=True,
                            limit_choices_to={'position' : 'DT',
                                              'retired' : False})
+    dt_age = models.IntegerField(null=True, blank=True)
+    dt_rating = models.IntegerField(null=True, blank=True)
     lb = models.ForeignKey(Player, 
                            related_name='linebacker', 
                            null=True,
                            blank=True,
                            limit_choices_to={'position' : 'LB',
                                              'retired' : False})
+    lb_age = models.IntegerField(null=True, blank=True)
+    lb_rating = models.IntegerField(null=True, blank=True)
     cb = models.ForeignKey(Player, 
                            related_name='cornerback', 
                            null=True,
                            blank=True,
                            limit_choices_to={'position' : 'CB',
                                              'retired' : False})
+    cb_age = models.IntegerField(null=True, blank=True)
+    cb_rating = models.IntegerField(null=True, blank=True)
     s = models.ForeignKey(Player, 
                           related_name='safety', 
                           null=True,
                           blank=True,
                           limit_choices_to={'position' : 'S',
                                             'retired' : False})
+    s_age = models.IntegerField(null=True, blank=True)
+    s_rating = models.IntegerField(null=True, blank=True)
     p = models.ForeignKey(Player, 
                           related_name='punter', 
                           null=True,
                           blank=True,
                           limit_choices_to={'position' : 'P',
                                             'retired' : False})
+    p_age = models.IntegerField(null=True, blank=True)
+    p_rating = models.IntegerField(null=True, blank=True)
     k = models.ForeignKey(Player, 
                           related_name='kicker', 
                           null=True,
                           blank=True,
                           limit_choices_to={'position' : 'K',
                                             'retired' : False})
+    k_age = models.IntegerField(null=True, blank=True)
+    k_rating = models.IntegerField(null=True, blank=True)
     
     def get_positions(self):
         return ['qb', 'rb', 'wr', 'og', 'c', 'ot', 'dt', 'de', 'lb', 'cb', 's', 'k', 'p']

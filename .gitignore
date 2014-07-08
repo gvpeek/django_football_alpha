@@ -3,6 +3,7 @@ db.sqlite3
 
 # ignore compiled python files
 **/*.pyc
+**/migrations/*.pyc
 
 # ignore tests folder
 **/sandbox

@@ -139,19 +139,15 @@ def copy_rosters(universe, source_year, new_year):
                 roster.year = new_year
 
                 for position in roster.get_positions():
-                        player = getattr(roster,position)
-                        if player.retired:
-                                setattr(roster,position,None)
+                    player = getattr(roster,position)
+                    if player.retired:
+                        setattr(roster,position,None)
+                        setattr(roster,position+'_age',None)
+                        setattr(roster,position+'_rating',None)
+                    else:
+                        setattr(roster,position+'_age',player.age)
+                        setattr(roster,position+'_rating',player.ratings)
                 roster.save()
-                # print roster.team.id, roster.team.city, roster.team.nickname
-                # new_roster=Roster(universe=universe,
-                #                   year=new_year,
-                #                   team=roster.team)
-                # for position in roster.get_positions():
-                #     player = getattr(roster,position)
-                #     if not player.retired:
-                #         setattr(new_roster,position,player)
-                # new_roster.save()
 
 # Game
 
@@ -293,6 +289,8 @@ def draft_players(universe):
                     current_player.signed=False
                     current_player.save()
                 setattr(roster,pick_position.lower(),player)
+                setattr(roster,pick_position.lower()+'_age',player.age)
+                setattr(roster,pick_position.lower()+'_rating',player.ratings)
                 roster.save()
                 player.signed=True
                 player.save()
@@ -600,17 +598,17 @@ def add_fields_to_team(team, game):
         roster = Roster.objects.get(universe=game.universe,
                                     year=game.year,
                                     team=team)
-        team.skills = {'qb': roster.qb.ratings,
-                                     'rb': roster.rb.ratings,
-                                     'wr': roster.wr.ratings,
-                                     'ol': ((roster.og.ratings + roster.c.ratings + roster.ot.ratings) / 3),
-                                     'dl': ((roster.dt.ratings + roster.de.ratings) / 2),
-                                     'lb': roster.lb.ratings,
-                                     'cb': roster.cb.ratings,
-                                     's': roster.s.ratings,
-                                     'p': roster.p.ratings,
-                                     'k': roster.k.ratings,
-                                     'sp': roster.wr.ratings}
+        team.skills = {'qb': roster.qb_rating,
+                         'rb': roster.rb_rating,
+                         'wr': roster.wr_rating,
+                         'ol': ((roster.og_rating + roster.c_rating + roster.ot_rating) / 3),
+                         'dl': ((roster.dt_rating + roster.de_rating) / 2),
+                         'lb': roster.lb_rating,
+                         'cb': roster.cb_rating,
+                         's': roster.s_rating,
+                         'p': roster.p_rating,
+                         'k': roster.k_rating,
+                         'sp': roster.wr_rating}
         team.primary_color = (randint(0,255),randint(0,255),randint(0,255))
         team.secondary_color = (randint(0,255),randint(0,255),randint(0,255))
         p = Playbook.objects.get(id=1)
