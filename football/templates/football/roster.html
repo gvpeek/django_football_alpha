@@ -14,12 +14,12 @@
 				</tr>
 			</thead>
 			<tbody>
-				{% for player in roster %}
+				{% for player, age, rating in roster %}
 				<tr>
 					<td>{{ player.last_name }}, {{ player.first_name }}</td>
 					<td>{{ player.position }}</td>
-					<td>{{ player.age }}</td>
-					<td>{{ player.ratings }}</td>
+					<td>{{ age }}</td>
+					<td>{{ rating }}</td>
 				</tr>
 				{% endfor %}
 			</tbody>
