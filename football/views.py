@@ -161,7 +161,18 @@ def create_playbook(request):
 
 # Teams
 
+def determine_number_pro_teams(universe):
+    position_counts=[]
+    for position in ['qb', 'rb', 'wr', 'og', 'c', 'ot', 'dt', 'de', 'lb', 'cb', 's', 'k', 'p']: # Roster.get_positions():
+         # Player.objects.filter(universe=universe, position=position.upper(), age__gte=23, ratings__gte=70).count()
+        position_counts.append(Player.objects.filter(universe=universe, 
+                                                     position=position.upper(), 
+                                                     age__gte=23, 
+                                                     ratings__gte=70).count())
+    return sum(position_counts) / len(position_counts)
+
 def create_teams(request, universe, level, number):
+        number = determine_number_pro_teams(universe)
         if level == 'any':
                 cities = City.objects.all()
                 nicknames = Nickname.objects.all()
@@ -221,10 +232,6 @@ def show_roster(request, team_id, year):
                   (roster.s, roster.s_age, roster.s_rating),
                   (roster.k, roster.k_age, roster.k_rating),
                   (roster.p, roster.p_age, roster.k_rating)]
-        for player, age, rating in roster_list:
-            # print line
-            # for player, age, rating in line:
-                print player, age, rating
         template = loader.get_template('football/roster.html')
         context = RequestContext(request, {
                 'team' : team,
@@ -237,6 +244,7 @@ def determine_draft_needs(preference, roster):
         for position in preference:
                 if getattr(roster, position.lower()):
                         filled.append(position)
+        shuffle(filled)
         for position in filled:
                 preference.remove(position)
                 preference.append(position)
@@ -448,27 +456,28 @@ def age_players(universe, years):
 # League
 
 def create_league(request,
-                                    universe_id,
-                                    name,
-                                    level,
-                                    nbr_conf,
-                                    nbr_div,
-                                    nbr_teams,
-                                    nbr_playoff_teams):
+                  universe_id,
+                  name,
+                  level,
+                  nbr_conf,
+                  nbr_div,
+                  nbr_teams,
+                  nbr_playoff_teams):
         u = Universe.objects.get(id=universe_id)
         y = Year.objects.get(universe=u,current_year=True)
         universe_teams = Team.objects.filter(universe=u)
         placed_teams = LeagueMembership.objects.filter(universe=u,
-                                                                                                     year=y)
-        available_teams = set(universe_teams) - set(placed_teams)
+                                                       year=y)
+        available_teams = list(set(universe_teams) - set(placed_teams))
+        available_teams = sorted(available_teams,key=operator.attrgetter('city.division'))
         conferences=[]
         for x in xrange(int(nbr_conf)):
-                divisions = create_divisions(list(available_teams), int(nbr_div))
+                divisions = create_divisions(available_teams, int(nbr_div))
                 conferences.append(divisions)
         
         l = League(universe=u,
-                             name=name,
-                             level=level)
+                   name=name,
+                   level=level)
         l.save()
         
         conf_nbr=0
@@ -477,11 +486,11 @@ def create_league(request,
                 for division in divisions:
                         for team in division:
                                 lm = LeagueMembership(universe=u,
-                                                                            year=y,
-                                                                            league=l,
-                                                                            team=team,
-                                                                            conference=conf_nbr,
-                                                                            division=div_nbr)
+                                                      year=y,
+                                                      league=l,
+                                                      team=team,
+                                                      conference=conf_nbr,
+                                                      division=div_nbr)
                                 lm.save()
                         div_nbr+=1
                 conf_nbr+=1
@@ -510,10 +519,10 @@ def create_divisions(teams,nbr_div):
         
 def create_schedule(league):
         y = Year.objects.get(universe=league.universe,
-                                                 current_year=True)
+                             current_year=True)
         teams = LeagueMembership.objects.filter(universe=league.universe,
-                                                                                        year=y,
-                                                                                        league=league)
+                                                year=y,
+                                                league=league)
         structure = {}
         for team in teams:
                 structure.setdefault(team.conference, {})
@@ -543,42 +552,42 @@ def create_schedule(league):
                         for week in range(nbr_weeks):
                                 if anchor_team:
                                         schedule[week].append(Game(universe=league.universe,
-                                                                                             year=y,
-                                                                                             home_team=anchor_team, 
-                                                                                             away_team=rotation2[-1],
-                                                                                             use_overtime = True,
-                                                                                             league_game = False,
-                                                                                             division_game = False,
-                                                                                             conference_game = False,
-                                                                                             playoff_game = False))
+                                                                 year=y,
+                                                                 home_team=anchor_team, 
+                                                                 away_team=rotation2[-1],
+                                                                 use_overtime = True,
+                                                                 league_game = False,
+                                                                 division_game = False,
+                                                                 conference_game = False,
+                                                                 playoff_game = False))
                                         schedule[week+nbr_weeks].append(Game(universe=league.universe,
-                                                                                                                 year=y,
-                                                                                                                 home_team=rotation2[-1], 
-                                                                                                                 away_team=anchor_team,
-                                                                                                                 use_overtime = True,
-                                                                                                                 league_game = False,
-                                                                                                                 division_game = False,
-                                                                                                                 conference_game = False,
-                                                                                                                 playoff_game = False))
+                                                                             year=y,
+                                                                             home_team=rotation2[-1], 
+                                                                             away_team=anchor_team,
+                                                                             use_overtime = True,
+                                                                             league_game = False,
+                                                                             division_game = False,
+                                                                             conference_game = False,
+                                                                             playoff_game = False))
                                 for t1, t2 in zip(rotation1,rotation2):
                                         schedule[week].append(Game(universe=league.universe,
-                                                                                             year=y,
-                                                                                             home_team=t1,
-                                                                                             away_team=t2,
-                                                                                             use_overtime = False,
-                                                                                             league_game = False,
-                                                                                             division_game = False,
-                                                                                             conference_game = False,
-                                                                                             playoff_game = False))
+                                                                 year=y,
+                                                                 home_team=t1,
+                                                                 away_team=t2,
+                                                                 use_overtime = True,
+                                                                 league_game = False,
+                                                                 division_game = False,
+                                                                 conference_game = False,
+                                                                 playoff_game = False))
                                         schedule[week+nbr_weeks].append(Game(universe=league.universe,
-                                                                                                                 year=y,
-                                                                                                                 home_team=t2,
-                                                                                                                 away_team=t1,
-                                                                                                                 use_overtime = False,
-                                                                                                                 league_game = False,
-                                                                                                                 division_game = False,
-                                                                                                                 conference_game = False,
-                                                                                                                 playoff_game = False))
+                                                                             year=y,
+                                                                             home_team=t2,
+                                                                             away_team=t1,
+                                                                             use_overtime = True,
+                                                                             league_game = False,
+                                                                             division_game = False,
+                                                                             conference_game = False,
+                                                                             playoff_game = False))
 
                                 rotation1.append(rotation2.pop())
                                 rotation2.appendleft(rotation1.popleft())
@@ -587,19 +596,19 @@ def create_schedule(league):
                         for game in week:
                                 game.save()
                                 s = Schedule(universe=league.universe,
-                                                                                             year=y,
-                                                                                             league=league,
-                                                                                             game=game,
-                                                                                             week=schedule.index(week) + 1,
-                                                                                             game_number=week.index(game) + 1)
+                                             year=y,
+                                             league=league,
+                                             game=game,
+                                             week=schedule.index(week) + 1,
+                                             game_number=week.index(game) + 1)
                                 s.save()
         
 def play_season(league):
         y = Year.objects.get(universe=league.universe,
                                                  current_year=True)
         schedule = Schedule.objects.filter(universe=league.universe,
-                                                                             year=y,
-                                                                             league=league)
+                                         year=y,
+                                         league=league)
         for item in schedule:
                 g = Game.objects.get(id=item.game.id)
                 add_fields_to_team(g.home_team, g)

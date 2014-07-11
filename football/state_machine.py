@@ -196,7 +196,7 @@ class Conversion(State):
         self.field.conversion_set()        
         
     def timed_play(self):
-        return False
+        return True
 
     def check_state(self,turnover,events):
         self.active = False

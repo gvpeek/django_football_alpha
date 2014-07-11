@@ -199,7 +199,8 @@ class Game():
         self.determine_events(play)
         self.plays.append(play)
         self.statkeeper.update_stats(play,self.get_state)
-        if self.current_state.timed_play():
+        if self.current_state.timed_play() and not (self.plays[-1].events['offense_touchdown'] \
+                            or  self.plays[-1].events['defense_touchdown']):
             self.current_clock.run_clock()
         self.current_state = self.current_state.check_state(play.turnover,
                                                             play.events)
