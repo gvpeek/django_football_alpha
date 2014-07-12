@@ -383,6 +383,7 @@ class League(models.Model):
     universe = models.ForeignKey(Universe, related_name='league_universe')
     name = models.CharField(max_length=100)
     level = models.CharField(max_length=7,choices=LEVELS, default='pro')
+    number_playoff_teams = models.IntegerField(default=1)
     
 class LeagueMembership(models.Model):
     def __unicode__(self):
@@ -421,8 +422,27 @@ class Schedule(models.Model):
     game = models.ForeignKey(Game, related_name='schedule_game')
     week = models.IntegerField()
     game_number = models.IntegerField()
-    
 
+class PlayoffTeams(models.Model):
+    def __unicode__(self):
+        return unicode(self.seed) + ' - ' + unicode(self.team) 
+
+    universe = models.ForeignKey(Universe, related_name='playoff_universe')
+    year = models.ForeignKey(Year, related_name='playoff_year')
+    league = models.ForeignKey(League, related_name='playoff_league')
+    team = models.ForeignKey(Team, related_name='playoff_team')
+    seed = models.IntegerField()
+    qualification = models.CharField(max_length=9)
+
+class Champions(models.Model):
+    def __unicode__(self):
+        return unicode(self.team) 
+
+    universe = models.ForeignKey(Universe, related_name='champions_universe')
+    year = models.ForeignKey(Year, related_name='champions_year')
+    league = models.ForeignKey(League, related_name='champions_league')
+    team = models.ForeignKey(Team, related_name='champions_team')
+    
 # Stats
 
 class TeamStats(models.Model):
@@ -437,6 +457,8 @@ class TeamStats(models.Model):
     ties = models.IntegerField(default=0)
     pct = models.DecimalField(max_digits=4, decimal_places=3, default=0.00)
     score = models.IntegerField(default=0)
+    opp = models.IntegerField(default=0)
+    diff = models.IntegerField(default=0)
     score_by_period = models.CommaSeparatedIntegerField(max_length=30, default=[0,0,0,0])
     total_yards = models.IntegerField(default=0)
     pass_att = models.IntegerField(default=0)

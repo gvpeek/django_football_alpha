@@ -21,7 +21,10 @@ from playbook import Playbook as PlaybookInit # workaround, remove this when fix
 from stats import StatBook # workaround, remove this when fixed
 
 # import models
-from models import Universe, Player, Year, City, Nickname, Team, Roster, League, LeagueMembership, get_draft_position_order, Game, Schedule, Coach, Playbook, TeamStats, GameStats
+from models import Universe, Player, Year, City, Nickname, \
+                   Team, Roster, League, LeagueMembership, \
+                   get_draft_position_order, Game, Schedule, \
+                   Coach, Playbook, TeamStats, GameStats, PlayoffTeams
 
 import names
 
@@ -463,11 +466,11 @@ def create_league(request,
                   nbr_div,
                   nbr_teams,
                   nbr_playoff_teams):
-        u = Universe.objects.get(id=universe_id)
-        y = Year.objects.get(universe=u,current_year=True)
-        universe_teams = Team.objects.filter(universe=u)
-        placed_teams = LeagueMembership.objects.filter(universe=u,
-                                                       year=y)
+        universe = Universe.objects.get(id=universe_id)
+        year = Year.objects.get(universe=universe,current_year=True)
+        universe_teams = Team.objects.filter(universe=universe)
+        placed_teams = LeagueMembership.objects.filter(universe=universe,
+                                                       year=year)
         available_teams = list(set(universe_teams) - set(placed_teams))
         available_teams = sorted(available_teams,key=operator.attrgetter('city.division'))
         conferences=[]
@@ -475,19 +478,19 @@ def create_league(request,
                 divisions = create_divisions(available_teams, int(nbr_div))
                 conferences.append(divisions)
         
-        l = League(universe=u,
+        league = League(universe=universe,
                    name=name,
                    level=level)
-        l.save()
+        league.save()
         
         conf_nbr=0
         div_nbr=0
         for conference in conferences:
                 for division in divisions:
                         for team in division:
-                                lm = LeagueMembership(universe=u,
-                                                      year=y,
-                                                      league=l,
+                                lm = LeagueMembership(universe=universe,
+                                                      year=year,
+                                                      league=league,
                                                       team=team,
                                                       conference=conf_nbr,
                                                       division=div_nbr)
@@ -495,9 +498,13 @@ def create_league(request,
                         div_nbr+=1
                 conf_nbr+=1
 
-        draft_players(u)        
-        create_schedule(l)
-        play_season(l)
+        league.number_playoff_teams = randint((div_nbr+1),(len(available_teams)/2))
+        league.save()
+
+        draft_players(universe)        
+        create_schedule(league)
+        play_season(league)
+        play_playoffs(league)
         
         return HttpResponse("Created league %s." % name)
                                     
@@ -618,7 +625,49 @@ def play_season(league):
                                              use_overtime=g.use_overtime)
                 game.start_game()
                 update_stats(g, game)
-                
+
+def determine_playoff_field(league):
+    year = Year.objects.get(universe=league.universe,
+                            current_year=True)
+    sorted_standings = get_sorted_standings(league, year)
+
+    division_winners=[]
+    wild_card=[]
+
+    for conference in sorted_standings:
+        for div in conference:
+            division_winners.append(div[0])
+            wild_card.extend(div[1:])
+        
+    division_winners = sorted(division_winners, key=operator.attrgetter('pct', 'diff', 'score'), reverse=True)
+    wild_card = sorted(wild_card, key=operator.attrgetter('pct', 'diff', 'score'), reverse=True)
+
+    seed = 1
+    for team in division_winners:
+        pt = PlayoffTeams(universe = league.universe,
+                            year = year,
+                            league = league,
+                            team = team.team,
+                            seed = seed,
+                            qualification = 'division')
+        pt.save()
+        seed += 1
+
+    number_wild_card = league.number_playoff_teams - len(division_winners)
+    for team in wild_card[:number_wild_card]:
+        pt = PlayoffTeams(universe = league.universe,
+                            year = year,
+                            league = league,
+                            team = team.team,
+                            seed = seed,
+                            qualification = 'wild_card')
+        pt.save()
+        seed += 1
+
+
+def play_playoffs(league):
+    determine_playoff_field(league)
+              
 def add_fields_to_team(team, game):
         roster = Roster.objects.get(universe=game.universe,
                                     year=game.year,
@@ -673,43 +722,48 @@ def show_league_detail(request, league_id):
         
         return HttpResponse(template.render(context))
 
+def get_sorted_standings(league, year):
+    members = LeagueMembership.objects.filter(universe=league.universe, year=year, league=league).order_by('conference', 'division')
+    standings = []
+    sorted_standings = []
+    for item in members:
+            try:
+                    standings[item.conference]
+            except:
+                    standings.append([])
+            try:
+                    standings[item.conference][item.division]
+            except:
+                    standings[item.conference].append([])
+            stats = TeamStats.objects.get(universe=item.universe, year=item.year, team=item.team)
+            standings[item.conference][item.division].append(stats)
+
+    for conference in standings:  
+            sorted_standings.append([])
+            ix = len(sorted_standings) - 1
+            for division in conference:
+                    sorted_standings[ix].append(sorted(division, key=operator.attrgetter('pct', 'diff', 'score'), reverse=True))
+
+    return sorted_standings
+
 def show_standings(request, league_id, year):
-        l = League.objects.get(id=league_id)
-        y = Year.objects.get(universe=l.universe, year=year)
-        members = LeagueMembership.objects.filter(universe=l.universe, year=y, league=l).order_by('conference', 'division')
-        standings = []
-        sorted_standings = []
-        for item in members:
-                try:
-                        standings[item.conference]
-                except:
-                        standings.append([])
-                try:
-                        standings[item.conference][item.division]
-                except:
-                        standings[item.conference].append([])
-                stats = TeamStats.objects.get(universe=item.universe, year=item.year, team=item.team)
-                standings[item.conference][item.division].append(stats)
-
-        for conference in standings:  
-                sorted_standings.append([])
-                ix = len(sorted_standings) - 1
-                for division in conference:
-                        sorted_standings[ix].append(sorted(division, key=operator.attrgetter('pct'), reverse=True))
-
+        league = League.objects.get(id=league_id)
+        year_obj = Year.objects.get(universe=league.universe, year=year)
+        
+        sorted_standings = get_sorted_standings(league, year_obj)
 
         schedule_results=[]
         try:
-                games = Game.objects.filter(universe=l.universe, year=y)
+                games = Game.objects.filter(universe=league.universe, year=year_obj)
                 for game in games:
                         home_stats = GameStats.objects.get(universe=game.universe,
                                                              year=game.year,
                                                              game=game,
                                                              team=game.home_team)
                         away_stats = GameStats.objects.get(universe=game.universe,
-                                                                                             year=game.year,
-                                                                                             game=game,
-                                                                                             team=game.away_team)
+                                                             year=game.year,
+                                                             game=game,
+                                                             team=game.away_team)
                         away=[]
                         away.extend([away_stats.team])
                         away.extend(literal_eval(away_stats.score_by_period))
@@ -724,7 +778,7 @@ def show_standings(request, league_id, year):
 
         template = loader.get_template('football/standings.html')
         context = RequestContext(request, {
-                'league_name' : l.name,
+                'league_name' : league.name,
                 'year' : year,
                 'standings' : sorted_standings,
                 'schedule' : schedule_results,
@@ -786,6 +840,9 @@ def update_stats(db_game, game):
                 home_db_game_stats.outcome = 'L'
                 away_db_game_stats.outcome = 'W'
 
+        home_db_team_stats.opp += away_game_stats['score']
+        away_db_team_stats.opp += home_game_stats['score']
+
         for db_game_stats, db_team_stats, game_stats in stats:
                 for key, game_value in game_stats.iteritems():
                         db_team_value = getattr(db_team_stats,key)
@@ -804,5 +861,6 @@ def update_stats(db_game, game):
                         setattr(db_team_stats,key,db_team_value)
                 db_team_stats.pct = (db_team_stats.wins + (db_team_stats.ties / 2.0)) / (float(db_team_stats.wins + db_team_stats.losses + db_team_stats.ties))
                 db_team_stats.completion_pct = (db_team_stats.pass_comp / float(db_team_stats.pass_att))
+                db_team_stats.diff = db_team_stats.score - db_team_stats.opp
                 db_game_stats.save()
                 db_team_stats.save()

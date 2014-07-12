@@ -1,5 +1,8 @@
 from django.contrib import admin
-from football.models import Player, Year, City, Nickname, Team, Roster, Universe, League, LeagueMembership, Game, Schedule, Coach, Playbook, TeamStats, GameStats
+from football.models import Player, Year, City, Nickname, Team, Roster, \
+                            Universe, League, LeagueMembership, Game, \
+                            Schedule, Coach, Playbook, TeamStats, GameStats, \
+                            PlayoffTeams, Champions
 
 class YearAdmin(admin.ModelAdmin):
     list_display = ('year', 'current_year', 'universe')
@@ -60,7 +63,7 @@ class PlaybookAdmin(admin.ModelAdmin):
 
 class TeamStatsAdmin(admin.ModelAdmin):
     list_display = ('team', 'year', 'wins', 'losses', 'ties', 'pct', 'score', 
-                    'score_by_period', 'total_yards', 'pass_att',  
+                    'opp', 'diff', 'score_by_period', 'total_yards', 'pass_att',  
                     'pass_comp', 'completion_pct', 'pass_yards', 'pass_td',  
                     'intercepted', 'sacked', 'rush_att', 'rush_yards', 
                     'rush_td', 'fumbles', 'universe')
@@ -71,6 +74,8 @@ class GameStatsAdmin(admin.ModelAdmin):
                     'pass_yards', 'pass_td',  'intercepted', 'sacked', 'rush_att', 
                     'rush_yards', 'rush_td', 'fumbles', 'universe')
 
+class PlayoffTeamsAdmin(admin.ModelAdmin):
+    list_display = ('universe', 'year', 'league', 'team', 'seed', 'qualification')
 
 admin.site.register(Universe)
 admin.site.register(Year, YearAdmin)
@@ -87,3 +92,4 @@ admin.site.register(Coach, CoachAdmin)
 admin.site.register(Playbook, PlaybookAdmin)
 admin.site.register(TeamStats, TeamStatsAdmin)
 admin.site.register(GameStats, GameStatsAdmin)
+admin.site.register(PlayoffTeams, PlayoffTeamsAdmin)
