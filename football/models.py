@@ -407,10 +407,10 @@ class Game(models.Model):
     number_of_periods = models.IntegerField(default=4)
     use_overtime = models.BooleanField()
     number_of_overtime_periods = models.IntegerField(default=1)
-    league_game = models.BooleanField()
-    division_game = models.BooleanField()
-    conference_game = models.BooleanField()
-    playoff_game = models.BooleanField()
+    league_game = models.BooleanField(default=False)
+    division_game = models.BooleanField(default=False)
+    conference_game = models.BooleanField(default=False)
+    playoff_game = models.BooleanField(default=False)
     
 class Schedule(models.Model):
     def __unicode__(self):
@@ -433,6 +433,7 @@ class PlayoffTeams(models.Model):
     team = models.ForeignKey(Team, related_name='playoff_team')
     seed = models.IntegerField()
     qualification = models.CharField(max_length=9)
+    eliminated = models.BooleanField(default=False)
 
 class Champions(models.Model):
     def __unicode__(self):

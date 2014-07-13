@@ -14,6 +14,7 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from django.db import transaction
 from django.template import RequestContext, loader
+from django.db.models import Max
 
 from game import Game as GameDay
 # from coach import Coach # workaround, remove this when fixed
@@ -535,6 +536,7 @@ def create_schedule(league):
                 structure.setdefault(team.conference, {})
                 structure[team.conference].setdefault(team.division, [])
                 structure[team.conference][team.division].append(team.team)
+        total_weeks = 0
         schedule = []
         for conference, divisions in structure.iteritems():
                 for div_nbr, division in divisions.iteritems():
@@ -545,6 +547,16 @@ def create_schedule(league):
                         balanced = 1 - (len(division) % 2)
                         nbr_weeks = len(division) - balanced
                         max_weeks = 2 * nbr_weeks
+                        # To ensure all league teams play the same number of games
+                        # regardless of the number of teams in their division
+                        # capture the highest number of games played in a division
+                        # and apply that to all. The largest division should be 
+                        # processed first.
+                        if max_weeks > total_weeks:
+                            total_weeks = max_weeks
+                        else:
+                            max_weeks = total_weeks
+
                         try:
                                 schedule[max_weeks]
                         except:
@@ -562,39 +574,23 @@ def create_schedule(league):
                                                                  year=y,
                                                                  home_team=anchor_team, 
                                                                  away_team=rotation2[-1],
-                                                                 use_overtime = True,
-                                                                 league_game = False,
-                                                                 division_game = False,
-                                                                 conference_game = False,
-                                                                 playoff_game = False))
+                                                                 use_overtime = True))
                                         schedule[week+nbr_weeks].append(Game(universe=league.universe,
                                                                              year=y,
                                                                              home_team=rotation2[-1], 
                                                                              away_team=anchor_team,
-                                                                             use_overtime = True,
-                                                                             league_game = False,
-                                                                             division_game = False,
-                                                                             conference_game = False,
-                                                                             playoff_game = False))
+                                                                             use_overtime = True))
                                 for t1, t2 in zip(rotation1,rotation2):
                                         schedule[week].append(Game(universe=league.universe,
                                                                  year=y,
                                                                  home_team=t1,
                                                                  away_team=t2,
-                                                                 use_overtime = True,
-                                                                 league_game = False,
-                                                                 division_game = False,
-                                                                 conference_game = False,
-                                                                 playoff_game = False))
+                                                                 use_overtime = True))
                                         schedule[week+nbr_weeks].append(Game(universe=league.universe,
                                                                              year=y,
                                                                              home_team=t2,
                                                                              away_team=t1,
-                                                                             use_overtime = True,
-                                                                             league_game = False,
-                                                                             division_game = False,
-                                                                             conference_game = False,
-                                                                             playoff_game = False))
+                                                                             use_overtime = True))
 
                                 rotation1.append(rotation2.pop())
                                 rotation2.appendleft(rotation1.popleft())
@@ -664,9 +660,53 @@ def determine_playoff_field(league):
         pt.save()
         seed += 1
 
+def generate_playoff_schedule(league):
+    year = Year.objects.get(universe=league.universe,
+                        current_year=True)
+    current_field = PlayoffTeams.objects.filter(universe=league.universe,
+                                            year=year,
+                                            league=league).filter(eliminated=False).order_by('seed')
+    current_round_teams=[]
+    s=2
+    c=1
+    while s > 1:
+        c *= 2
+        s=len(current_field) / c
+    remainder = len(current_field) % c
+    
+    if remainder:
+        cf_deque=deque(current_field)
+        cf_deque.rotate(remainder*2)
+        for x in xrange(remainder*2):
+            current_round_teams.append(cf_deque.popleft())
+    else:
+        current_round_teams=current_field
+
+    round_games=[]
+    for x in xrange(len(current_round_teams)/2):
+        round_games.append(Game(universe=league.universe,
+                                year=year,
+                                home_team=current_round_teams[x].team,
+                                away_team=current_round_teams[-x-1].team,
+                                use_overtime=True,
+                                playoff_game = True))
+
+    max_week = Schedule.objects.filter(universe=league.universe,
+                                    year=year,
+                                    league=league).aggregate(Max('week'))['week__max']
+    for game in round_games:
+        game.save()
+        schedule = Schedule(universe=league.universe,
+                     year=year,
+                     league=league,
+                     game=game,
+                     week=max_week + 1,
+                     game_number=round_games.index(game) + 1)
+        schedule.save()
 
 def play_playoffs(league):
-    determine_playoff_field(league)
+    playoff_teams = determine_playoff_field(league)
+    generate_playoff_schedule(league)
               
 def add_fields_to_team(team, game):
         roster = Roster.objects.get(universe=game.universe,
