@@ -25,7 +25,8 @@ from stats import StatBook # workaround, remove this when fixed
 from models import Universe, Player, Year, City, Nickname, \
                    Team, Roster, League, LeagueMembership, \
                    get_draft_position_order, Game, Schedule, \
-                   Coach, Playbook, TeamStats, GameStats, PlayoffTeams
+                   Coach, Playbook, TeamStats, GameStats, \
+                   PlayoffTeams, Champions
 
 import names
 
@@ -121,6 +122,7 @@ def advance_year(request,universe_id):
         for l in leagues:
                 create_schedule(l)
                 play_season(l)
+                play_playoffs(l)
 
         return HttpResponse("Advanced one year.")
         
@@ -552,10 +554,12 @@ def create_schedule(league):
                         # capture the highest number of games played in a division
                         # and apply that to all. The largest division should be 
                         # processed first.
-                        if max_weeks > total_weeks:
-                            total_weeks = max_weeks
+                        print nbr_weeks, total_weeks
+                        if nbr_weeks > total_weeks:
+                            total_weeks = nbr_weeks
                         else:
-                            max_weeks = total_weeks
+                            nbr_weeks = total_weeks - balanced
+                        print nbr_weeks, total_weeks
 
                         try:
                                 schedule[max_weeks]
@@ -605,22 +609,47 @@ def create_schedule(league):
                                              week=schedule.index(week) + 1,
                                              game_number=week.index(game) + 1)
                                 s.save()
-        
+
+def play_game(id):
+    g = Game.objects.get(id=id)
+    add_fields_to_team(g.home_team, g)
+    add_fields_to_team(g.away_team, g)
+    game = GameDay(home_team=g.home_team, 
+                   away_team=g.away_team, 
+                   use_overtime=g.use_overtime)
+    game.start_game()
+    update_stats(g, game)
+
+def play_unplayed_games(league, playoff=False):
+    year = Year.objects.get(universe=league.universe,
+                            current_year=True)
+    schedule = Schedule.objects.filter(universe=league.universe,
+                                       year=year,
+                                       league=league,
+                                       played=False)
+
+    for game in schedule:
+        play_game(game.game.id)
+        game.played = True
+        game.save()
+        if playoff:
+            game_stats = GameStats.objects.filter(game=game.game.id)
+            if game_stats[0].outcome == 'W':
+                loser = game_stats[1].team
+            elif  game_stats[1].outcome == 'W':
+                loser = game_stats[0].team
+            else:
+                raise Exception("No winner in playoff game_stats")
+
+            pt = PlayoffTeams.objects.get(universe=league.universe,
+                                          year=year,
+                                          league=league,
+                                          team=loser)
+            pt.eliminated = True
+            pt.save()
+
 def play_season(league):
-        y = Year.objects.get(universe=league.universe,
-                                                 current_year=True)
-        schedule = Schedule.objects.filter(universe=league.universe,
-                                         year=y,
-                                         league=league)
-        for item in schedule:
-                g = Game.objects.get(id=item.game.id)
-                add_fields_to_team(g.home_team, g)
-                add_fields_to_team(g.away_team, g)
-                game = GameDay(home_team=g.home_team, 
-                                             away_team=g.away_team, 
-                                             use_overtime=g.use_overtime)
-                game.start_game()
-                update_stats(g, game)
+    play_unplayed_games(league)
 
 def determine_playoff_field(league):
     year = Year.objects.get(universe=league.universe,
@@ -632,12 +661,14 @@ def determine_playoff_field(league):
 
     for conference in sorted_standings:
         for div in conference:
+            print 'div sort', div
             division_winners.append(div[0])
             wild_card.extend(div[1:])
         
     division_winners = sorted(division_winners, key=operator.attrgetter('pct', 'diff', 'score'), reverse=True)
     wild_card = sorted(wild_card, key=operator.attrgetter('pct', 'diff', 'score'), reverse=True)
-
+    print 'div' , division_winners
+    print 'wild', wild_card
     seed = 1
     for team in division_winners:
         pt = PlayoffTeams(universe = league.universe,
@@ -663,9 +694,18 @@ def determine_playoff_field(league):
 def generate_playoff_schedule(league):
     year = Year.objects.get(universe=league.universe,
                         current_year=True)
-    current_field = PlayoffTeams.objects.filter(universe=league.universe,
+    current_field = list(PlayoffTeams.objects.filter(universe=league.universe,
                                             year=year,
-                                            league=league).filter(eliminated=False).order_by('seed')
+                                            league=league).filter(eliminated=False).order_by('seed'))
+    
+    if len(current_field) == 1:
+        champ = Champions(universe=league.universe,
+                          year=year,
+                          league=league,
+                          team=current_field[0].team)
+        champ.save()
+        return False
+
     current_round_teams=[]
     s=2
     c=1
@@ -704,9 +744,12 @@ def generate_playoff_schedule(league):
                      game_number=round_games.index(game) + 1)
         schedule.save()
 
+    return True
+
 def play_playoffs(league):
     playoff_teams = determine_playoff_field(league)
-    generate_playoff_schedule(league)
+    while generate_playoff_schedule(league):
+        play_unplayed_games(league,playoff=True)
               
 def add_fields_to_team(team, game):
         roster = Roster.objects.get(universe=game.universe,
@@ -794,8 +837,10 @@ def show_standings(request, league_id, year):
 
         schedule_results=[]
         try:
-                games = Game.objects.filter(universe=league.universe, year=year_obj)
-                for game in games:
+            games = Game.objects.filter(universe=league.universe, year=year_obj).order_by('id')
+            print len(games)
+            for idx, game in enumerate(games):
+                    try:
                         home_stats = GameStats.objects.get(universe=game.universe,
                                                              year=game.year,
                                                              game=game,
@@ -813,8 +858,10 @@ def show_standings(request, league_id, year):
                         home.extend(literal_eval(home_stats.score_by_period))
                         home.extend([home_stats.score])
                         schedule_results.append([away,home])
-        except:
-                pass
+                    except:
+                        schedule_results.append([[game.away_team],[game.home_team]])
+        except Exception, e:
+            print e
 
         template = loader.get_template('football/standings.html')
         context = RequestContext(request, {

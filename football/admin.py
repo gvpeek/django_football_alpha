@@ -43,7 +43,7 @@ class RosterAdmin(admin.ModelAdmin):
                     'universe')
 
 class LeagueAdmin(admin.ModelAdmin):
-    list_display = ('name', 'level', 'universe')
+    list_display = ('name', 'level', 'number_playoff_teams', 'universe')
 
 class LeagueMembershipAdmin(admin.ModelAdmin):
     list_display = ('league', 'year', 'conference', 'division', 'team', 'universe')
@@ -52,7 +52,7 @@ class GameAdmin(admin.ModelAdmin):
     list_display = ('away_team', 'home_team', 'year', 'universe') 
 
 class ScheduleAdmin(admin.ModelAdmin):
-    list_display = ('week', 'game_number', 'game', 'year', 'league')  
+    list_display = ('week', 'game_number', 'game', 'year', 'league', 'universe')  
     
 class CoachAdmin(admin.ModelAdmin):
     list_display = ('first_name', 'last_name', 'skill', 'play_probabilities', 
@@ -77,6 +77,9 @@ class GameStatsAdmin(admin.ModelAdmin):
 class PlayoffTeamsAdmin(admin.ModelAdmin):
     list_display = ('universe', 'year', 'league', 'team', 'seed', 'qualification')
 
+class ChampionsAdmin(admin.ModelAdmin):
+    list_display = ('universe', 'year', 'league', 'team')
+
 admin.site.register(Universe)
 admin.site.register(Year, YearAdmin)
 admin.site.register(Team, TeamAdmin)
@@ -93,3 +96,4 @@ admin.site.register(Playbook, PlaybookAdmin)
 admin.site.register(TeamStats, TeamStatsAdmin)
 admin.site.register(GameStats, GameStatsAdmin)
 admin.site.register(PlayoffTeams, PlayoffTeamsAdmin)
+admin.site.register(Champions, ChampionsAdmin)

@@ -422,6 +422,7 @@ class Schedule(models.Model):
     game = models.ForeignKey(Game, related_name='schedule_game')
     week = models.IntegerField()
     game_number = models.IntegerField()
+    played = models.BooleanField(default=False)
 
 class PlayoffTeams(models.Model):
     def __unicode__(self):
@@ -500,7 +501,11 @@ class TeamStats(models.Model):
     # 
     # class Meta:
     #     unique_together = ('year','universe','team')
-    
+  
+class PlayoffTeamStats(TeamStats):
+    def __unicode__(self):
+        return unicode(self.team) + ' ' + unicode(self.year)
+
 class GameStats(models.Model):
     def __unicode__(self):
         return unicode(self.team) + ' ' + unicode(self.score)

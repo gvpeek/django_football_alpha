@@ -37,7 +37,7 @@ class Game():
 #        self.league_game = league_game
 #        self.division_game = division_game
 #        self.conference_game = conference_game 
-#        self.playoff_game = playoff_game  
+        self.playoff_game = playoff_game  
         self.number_of_periods = number_of_periods
         self.use_overtime = use_overtime
         self.number_of_overtime_periods = number_of_overtime_periods
@@ -245,7 +245,7 @@ class Game():
                                                               self.get_offense)
                 if self.in_overtime:
 #                    print 'in in_overtime'
-                    if not self.number_of_overtime_periods or (self.period < (self.number_of_periods + self.number_of_overtime_periods)):
+                    if self.playoff_game or not self.number_of_overtime_periods or (self.period < (self.number_of_periods + self.number_of_overtime_periods)):
                         self.period += 1
                         self.current_clock = Clock()
                         ## TODO: I don't like doing this here, try to thin kof a better place
