@@ -2,7 +2,7 @@ from django.contrib import admin
 from football.models import Player, Year, City, Nickname, Team, Roster, \
                             Universe, League, LeagueMembership, Game, \
                             Schedule, Coach, Playbook, TeamStats, GameStats, \
-                            PlayoffTeams, Champions
+                            PlayoffTeams, PlayoffTeamStats, Champions
 
 class YearAdmin(admin.ModelAdmin):
     list_display = ('year', 'current_year', 'universe')
@@ -68,6 +68,8 @@ class TeamStatsAdmin(admin.ModelAdmin):
                     'intercepted', 'sacked', 'rush_att', 'rush_yards', 
                     'rush_td', 'fumbles', 'universe')
 
+class PlayoffTeamStatsAdmin(TeamStatsAdmin): pass
+
 class GameStatsAdmin(admin.ModelAdmin):
     list_display = ('team', 'game', 'year', 'outcome', 'score', 'score_by_period', 
                     'total_yards', 'pass_att',  'pass_comp', 'completion_pct', 
@@ -96,4 +98,5 @@ admin.site.register(Playbook, PlaybookAdmin)
 admin.site.register(TeamStats, TeamStatsAdmin)
 admin.site.register(GameStats, GameStatsAdmin)
 admin.site.register(PlayoffTeams, PlayoffTeamsAdmin)
+admin.site.register(PlayoffTeamStats, PlayoffTeamStatsAdmin)
 admin.site.register(Champions, ChampionsAdmin)

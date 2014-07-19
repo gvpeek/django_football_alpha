@@ -447,7 +447,7 @@ class Champions(models.Model):
     
 # Stats
 
-class TeamStats(models.Model):
+class Stats(models.Model):
     def __unicode__(self):
         return unicode(self.team) + ' ' + unicode(self.year)
             
@@ -501,10 +501,9 @@ class TeamStats(models.Model):
     # 
     # class Meta:
     #     unique_together = ('year','universe','team')
-  
-class PlayoffTeamStats(TeamStats):
-    def __unicode__(self):
-        return unicode(self.team) + ' ' + unicode(self.year)
+
+class TeamStats(Stats): pass  
+class PlayoffTeamStats(Stats): pass
 
 class GameStats(models.Model):
     def __unicode__(self):

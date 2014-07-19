@@ -26,7 +26,7 @@ from models import Universe, Player, Year, City, Nickname, \
                    Team, Roster, League, LeagueMembership, \
                    get_draft_position_order, Game, Schedule, \
                    Coach, Playbook, TeamStats, GameStats, \
-                   PlayoffTeams, Champions
+                   PlayoffTeams, PlayoffTeamStats, Champions
 
 import names
 
@@ -610,7 +610,7 @@ def create_schedule(league):
                                              game_number=week.index(game) + 1)
                                 s.save()
 
-def play_game(id):
+def play_game(id, playoff=False):
     g = Game.objects.get(id=id)
     add_fields_to_team(g.home_team, g)
     add_fields_to_team(g.away_team, g)
@@ -618,7 +618,7 @@ def play_game(id):
                    away_team=g.away_team, 
                    use_overtime=g.use_overtime)
     game.start_game()
-    update_stats(g, game)
+    update_stats(g, game, playoff)
 
 def play_unplayed_games(league, playoff=False):
     year = Year.objects.get(universe=league.universe,
@@ -629,7 +629,7 @@ def play_unplayed_games(league, playoff=False):
                                        played=False)
 
     for game in schedule:
-        play_game(game.game.id)
+        play_game(game.game.id, playoff)
         game.played = True
         game.save()
         if playoff:
@@ -889,23 +889,34 @@ def get_game_stats(universe, year, game, team):
                 gs.save()
         return gs
 
-def get_team_stats(universe, year, team):
-        try:
-                ts = TeamStats.objects.get(universe=universe,
-                                                                     year=year,
-                                                                     team=team)
-        except:
-                ts = TeamStats(universe=universe,
-                                             year=year,
-                                             team=team)
-                ts.save()
+def get_team_stats(universe, year, team, playoff=False):
+        if not playoff:
+            try:
+                    ts = TeamStats.objects.get(universe=universe,
+                                               year=year,
+                                               team=team)
+            except:
+                    ts = TeamStats(universe=universe,
+                                   year=year,
+                                   team=team)
+                    ts.save()
+        else:
+            try:
+                    ts = PlayoffTeamStats.objects.get(universe=universe,
+                                               year=year,
+                                               team=team)
+            except:
+                    ts = PlayoffTeamStats(universe=universe,
+                                   year=year,
+                                   team=team)
+                    ts.save()       
         return ts
 
-def update_stats(db_game, game):
+def update_stats(db_game, game, playoff=False):
         home_db_game_stats = get_game_stats(db_game.universe, db_game.year, db_game, db_game.home_team)
         away_db_game_stats = get_game_stats(db_game.universe, db_game.year, db_game, db_game.away_team)
-        home_db_team_stats = get_team_stats(db_game.universe, db_game.year, db_game.home_team)
-        away_db_team_stats = get_team_stats(db_game.universe, db_game.year, db_game.away_team)
+        home_db_team_stats = get_team_stats(db_game.universe, db_game.year, db_game.home_team, playoff)
+        away_db_team_stats = get_team_stats(db_game.universe, db_game.year, db_game.away_team, playoff)
         home_game_stats = game.get_home_team().statbook.stats
         away_game_stats = game.get_away_team().statbook.stats
         stats = [[home_db_game_stats, home_db_team_stats, home_game_stats],
