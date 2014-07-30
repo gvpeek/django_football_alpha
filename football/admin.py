@@ -77,7 +77,7 @@ class GameStatsAdmin(admin.ModelAdmin):
                     'rush_yards', 'rush_td', 'fumbles', 'universe')
 
 class PlayoffTeamsAdmin(admin.ModelAdmin):
-    list_display = ('universe', 'year', 'league', 'team', 'seed', 'qualification')
+    list_display = ('universe', 'year', 'league', 'team', 'seed', 'qualification', 'eliminated')
 
 class ChampionsAdmin(admin.ModelAdmin):
     list_display = ('universe', 'year', 'league', 'team')

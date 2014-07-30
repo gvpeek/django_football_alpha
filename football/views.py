@@ -72,10 +72,11 @@ def initialize_nicknames(request):
 ## Universe 
 
 def create_universe(request, name):
+        league_names  = ['AFL', 'NFL', 'CFL', 'NAFL', 'UFL', 'USFL', 'NFA', 'WFL', 'IFL']
         u = Universe(name=name)
         u.save()
-        seed_universe_players(u,700)
-        create_year(u, 1945)
+        seed_universe_players(u,1500)
+        create_year(u, randint(1940,2010))
         # TODO move this to an initialize method
         # TODO investigate better way of testing presence of data
         try:
@@ -90,8 +91,8 @@ def create_universe(request, name):
             Nickname.objects.get(id=1)
         except:
             initialize_nicknames(request)
-        create_teams(request, u, 'pro', 8)
-        create_league(request, u.id, 'AFL', 'pro', 1, 2, 8, 2)
+        create_teams(request, u, 'pro')
+        create_league(request, u.id, choice(league_names), 'pro')
         
         return HttpResponse("Universe %s created." % name)
 
@@ -112,7 +113,7 @@ def advance_year(request,universe_id):
         y.save()
         new_year = create_year(universe, y.year+1)
         age_players(universe, 1)
-        create_players(request, universe, 600)
+        create_players(request, universe, 1200)
         copy_league_memberships(universe, y, new_year)
         copy_rosters(universe, y, new_year)
         draft_players(universe)
@@ -177,7 +178,7 @@ def determine_number_pro_teams(universe):
                                                      ratings__gte=70).count())
     return sum(position_counts) / len(position_counts)
 
-def create_teams(request, universe, level, number):
+def create_teams(request, universe, level):
         number = determine_number_pro_teams(universe)
         if level == 'any':
                 cities = City.objects.all()
@@ -264,7 +265,7 @@ def draft_players(universe):
             previous_year = Year.objects.get(universe=universe,
                                              year=(current_year.year - 1))
         except Exception, e:
-            print e
+            print 'No previous year', e
 
         teams=[]
         try:
@@ -273,7 +274,7 @@ def draft_players(universe):
             for team_stat in team_order:
                 teams.append(list(Team.objects.get(id=team_stat.team.id))[0])
         except Exception, e:
-            print e
+            print 'No previous team stats', e
 
         if not teams:
             teams = Team.objects.filter(universe=universe)
@@ -465,10 +466,7 @@ def create_league(request,
                   universe_id,
                   name,
                   level,
-                  nbr_conf,
-                  nbr_div,
-                  nbr_teams,
-                  nbr_playoff_teams):
+                  nbr_div=0):
         universe = Universe.objects.get(id=universe_id)
         year = Year.objects.get(universe=universe,current_year=True)
         universe_teams = Team.objects.filter(universe=universe)
@@ -476,10 +474,17 @@ def create_league(request,
                                                        year=year)
         available_teams = list(set(universe_teams) - set(placed_teams))
         available_teams = sorted(available_teams,key=operator.attrgetter('city.division'))
-        conferences=[]
-        for x in xrange(int(nbr_conf)):
-                divisions = create_divisions(available_teams, int(nbr_div))
-                conferences.append(divisions)
+        divisions = create_divisions(available_teams, int(nbr_div))
+        
+        nbr_conf = len(divisions) / 2
+        conferences = [[] for x in xrange(nbr_conf)]
+        c = 0
+        for division in divisions:
+                conferences[c].append(division)
+                if c+1 == len(conferences):
+                    c = 0
+                else:
+                    c += 1
         
         league = League(universe=universe,
                    name=name,
@@ -487,9 +492,9 @@ def create_league(request,
         league.save()
         
         conf_nbr=0
-        div_nbr=0
         for conference in conferences:
-                for division in divisions:
+                div_nbr=0
+                for division in conference:
                         for team in division:
                                 lm = LeagueMembership(universe=universe,
                                                       year=year,
@@ -510,22 +515,32 @@ def create_league(request,
         play_playoffs(league)
         
         return HttpResponse("Created league %s." % name)
-                                    
-def create_divisions(teams,nbr_div):
-        divisions=[]
-        nbr_teams=len(teams)
-        div_size=nbr_teams/nbr_div
-        remainder=nbr_teams%nbr_div
-        split_start=0
-        split_end=0
-        for x in xrange(nbr_div):
-                split_end += div_size
-                if remainder:
-                        split_end += 1
-                        remainder -= 1
-                divisions.append(teams[split_start:split_end])
-                split_start=split_end
-        return divisions
+
+def determine_nbr_div(nbr_teams):
+    possible_div_sizes = [n for n in xrange(4,9) if not nbr_teams/n & 1]
+    
+    possible_nbr_divs = set(nbr_teams/x for x in possible_div_sizes)
+   
+    return choice(list(possible_nbr_divs))
+
+def create_divisions(teams,nbr_div=None):
+    divisions=[]
+    nbr_teams=len(teams)
+    if not nbr_div:
+        nbr_div = determine_nbr_div(nbr_teams)
+
+    teams_per_div=nbr_teams/nbr_div
+    remainder=nbr_teams%nbr_div
+    split_start=0
+    split_end=0
+    for x in xrange(nbr_div):
+        split_end += teams_per_div
+        if remainder:
+            split_end += 1
+            remainder -= 1
+        divisions.append(teams[split_start:split_end])
+        split_start=split_end
+    return divisions
         
 def create_schedule(league):
         y = Year.objects.get(universe=league.universe,
@@ -538,10 +553,12 @@ def create_schedule(league):
                 structure.setdefault(team.conference, {})
                 structure[team.conference].setdefault(team.division, [])
                 structure[team.conference][team.division].append(team.team)
+
         total_weeks = 0
         schedule = []
         for conference, divisions in structure.iteritems():
                 for div_nbr, division in divisions.iteritems():
+                        shuffle(division)
                         anchor_team = None
                         # 'balanced' will contain 1 if even number of teams,, 0 if odd
                         # used later to calculate number of weeks needed, since odd
@@ -554,12 +571,10 @@ def create_schedule(league):
                         # capture the highest number of games played in a division
                         # and apply that to all. The largest division should be 
                         # processed first.
-                        print nbr_weeks, total_weeks
                         if nbr_weeks > total_weeks:
                             total_weeks = nbr_weeks
                         else:
                             nbr_weeks = total_weeks - balanced
-                        print nbr_weeks, total_weeks
 
                         try:
                                 schedule[max_weeks]
@@ -599,16 +614,16 @@ def create_schedule(league):
                                 rotation1.append(rotation2.pop())
                                 rotation2.appendleft(rotation1.popleft())
 
-                for week in schedule:
-                        for game in week:
-                                game.save()
-                                s = Schedule(universe=league.universe,
-                                             year=y,
-                                             league=league,
-                                             game=game,
-                                             week=schedule.index(week) + 1,
-                                             game_number=week.index(game) + 1)
-                                s.save()
+        for week in schedule:
+                for game in week:
+                        game.save()
+                        s = Schedule(universe=league.universe,
+                                     year=y,
+                                     league=league,
+                                     game=game,
+                                     week=schedule.index(week) + 1,
+                                     game_number=week.index(game) + 1)
+                        s.save()
 
 def play_game(id, playoff=False):
     g = Game.objects.get(id=id)
@@ -634,12 +649,23 @@ def play_unplayed_games(league, playoff=False):
         game.save()
         if playoff:
             game_stats = GameStats.objects.filter(game=game.game.id)
-            if game_stats[0].outcome == 'W':
-                loser = game_stats[1].team
-            elif  game_stats[1].outcome == 'W':
-                loser = game_stats[0].team
-            else:
-                raise Exception("No winner in playoff game_stats")
+            print game_stats, game_stats[0].team, game_stats[0].score, game_stats[0].outcome, \
+                              game_stats[1].team, game_stats[1].score, game_stats[1].outcome
+            loser = None
+            for team in game_stats:
+                if team.outcome == 'L':
+                    if not loser:
+                        loser = team.team
+                    else:
+                        raise Exception('More than one playoff loser found ' + team.team + ' & ' + loser)
+            if not loser:
+                raise Exception('Playoff winner could not be determined')
+            # if game_stats[0].score >  game_stats[1].score:
+            #     loser = game_stats[1].team
+            # elif  game_stats[0].score <  game_stats[1].score:
+            #     loser = game_stats[0].team
+            # else:
+            #     raise Exception("No winner in playoff game_stats")
 
             pt = PlayoffTeams.objects.get(universe=league.universe,
                                           year=year,
@@ -838,7 +864,6 @@ def show_standings(request, league_id, year):
         schedule_results=[]
         try:
             games = Game.objects.filter(universe=league.universe, year=year_obj).order_by('id')
-            print len(games)
             for idx, game in enumerate(games):
                     try:
                         home_stats = GameStats.objects.get(universe=game.universe,
@@ -861,7 +886,7 @@ def show_standings(request, league_id, year):
                     except:
                         schedule_results.append([[game.away_team],[game.home_team]])
         except Exception, e:
-            print e
+            print 'Error generating standings:' , e
 
         template = loader.get_template('football/standings.html')
         context = RequestContext(request, {
